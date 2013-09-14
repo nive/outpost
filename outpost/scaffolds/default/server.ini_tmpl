@@ -1,8 +1,14 @@
 [app:main]
 # the directory to be served. Either a python module asset path, relative path 
 # or absolute path
-static.directory = {{root}}
-static.defaultfile = index.html
+server.directory = {{root}}
+server.defaultfile = index.html
+server.log_notfound = True
+
+# insert html code in all served files based on the served files extension.
+# filter.inserthead takes the name of the file to inserted e.g. files/insert.html 
+filter.extensions = html
+filter.inserthead = 
 
 # The url prefix used to route request through the proxy. By default
 # urls starting with `http://127.0.0.1:5556/__proxy/` will be handled by the 

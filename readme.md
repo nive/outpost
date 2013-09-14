@@ -8,14 +8,19 @@ Use for local html application development with online webservice
 connection. To prevent browsers Cross Origin Resource Scripting
 all requests are routed through a single address.
 
+Implemented in pure python; with the web framework pyramid.
+
 ## Features
 
 - Serves static files from a directory
-- Routes webservice requests through the proxy   
+- Routes webservice requests through the proxy
+- Insert html snippets in served files
 - Several logging and debugging tools
 - Easy installation, runs on any os
 
-Implemented in pure python; with the web framework pyramid.
+## Configuration 
+
+See server.ini
 
 ## Installation
 

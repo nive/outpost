@@ -3,7 +3,6 @@ import logging
 import requests
 import time
 
-from pyramid.config import Configurator
 from pyramid.response import Response
 
 
@@ -39,10 +38,14 @@ class Proxy(object):
         if response.status_code >= 200 and response.status_code < 300:
             body = self.url.rewriteUrls(response.content)
             size = len(body)+len(str(response.raw.headers))
-            log.info(self.url.destUrl+" => Status: %s, %d bytes in %d ms" % (response.status_code, size, response.elapsed.microseconds/1000)) 
+            log.info(self.url.destUrl+" => Status: %s, %d bytes in %d ms" % (response.status_code, 
+                                                                             size, 
+                                                                             response.elapsed.microseconds/1000)) 
         else:
             body = response.content
-            log.info(self.url.destUrl+" => Status: %s %s, in %d ms" % (response.status_code, response.reason, response.elapsed.microseconds/1000)) 
+            log.info(self.url.destUrl+" => Status: %s %s, in %d ms" % (response.status_code, 
+                                                                       response.reason, 
+                                                                       response.elapsed.microseconds/1000)) 
 
         headers = dict(response.headers)
         if 'content-length' in headers:
@@ -67,7 +70,7 @@ class Proxy(object):
 
 
 
-class UrlHandler(object):
+class ProxyUrlHandler(object):
     """
     Handles proxied urls and converts them between source and destination.
     
