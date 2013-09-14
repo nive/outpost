@@ -18,7 +18,7 @@ class DefaultTemplate(PyramidTemplate):
         logger "root".
         """
         # configuration
-
+        
         vars['root'] = raw_input("Root directory for files (default './files'): ")
         if not vars['root']:
             vars['root'] = "files"

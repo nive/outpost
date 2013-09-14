@@ -7,7 +7,7 @@ static.defaultfile = index.html
 # The url prefix used to route request through the proxy. By default
 # urls starting with `http://127.0.0.1:5556/__proxy/` will be handled by the 
 # proxy
-proxy.route = {{proxy}}
+proxy.route = __proxy
 
 debugtoolbar.enabled = true
 debugtoolbar.panels =
@@ -23,8 +23,8 @@ use = call:outpost.server:main
 
 [server:main]
 use = egg:waitress#main
-host = {{host}}
-port = {{port}}
+host = 127.0.0.1
+port = 5556
 
 
 
