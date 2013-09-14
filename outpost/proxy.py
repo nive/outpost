@@ -73,7 +73,7 @@ class UrlHandler(object):
     
     e.g. the incoming Request/URL ::
 
-      http://localhost:6543/___proxy/http/test.nive.co/datastore/api/keys 
+      http://localhost:5556/___proxy/http/test.nive.co/datastore/api/keys 
   
     will be translated to the destination url ::
   

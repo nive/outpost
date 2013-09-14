@@ -32,9 +32,9 @@ def main(global_config, **settings):
 
     # extend relative directory
     wd = os.getcwd()+os.sep
-    if directory.startswith("./"):
+    if directory.startswith("."+os.sep):
         directory = wd + directory[2:]
-    elif directory.find(":") == -1 and not directory.startswith("/"):
+    elif directory.find(":") == -1 and not directory.startswith(os.sep):
         directory = wd + directory
         
     log.info("Serving files from directory: " + directory)
