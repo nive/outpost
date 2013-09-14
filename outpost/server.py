@@ -72,4 +72,7 @@ def main(global_config, **settings):
 
     config.commit()
         
+    logger = logging.getLogger("requests.packages.urllib3.connectionpool")
+    logger.level = "error"
+
     return config.make_wsgi_app()

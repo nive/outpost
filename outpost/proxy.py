@@ -98,9 +98,11 @@ class ProxyUrlHandler(object):
     
     """
     defaultProtocol = "http"
+    defaultPrefix = "/__proxy/"
     
     def __init__(self, urlparts):
         self.parts = urlparts     # urlparts is the source url in list form 
+        self.prefix = self.defaultPrefix
         if not urlparts[0] in ("http","https"):
             self.protocol = self.defaultProtocol
             self.domainname = urlparts[0]
@@ -130,6 +132,6 @@ class ProxyUrlHandler(object):
         return "/%s/%s" % (self.protocol, self.domainname)
     
     def rewriteUrls(self, body):
-        return body.replace(self.destDomain, self.srcDomain)
+        return body.replace(self.destDomain, self.prefix+self.srcDomain)
         
 

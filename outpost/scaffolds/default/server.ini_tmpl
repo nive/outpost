@@ -4,6 +4,7 @@
 server.directory = {{root}}
 server.defaultfile = index.html
 server.log_notfound = True
+server.content_type = text/html; charset=UTF-8
 
 # insert html code in all served files based on the served files extension.
 # filter.inserthead takes the name of the file to inserted e.g. files/insert.html 

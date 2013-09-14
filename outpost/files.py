@@ -31,7 +31,14 @@ class FileServer(object):
             if settings.get("server.log_notfound", "true").lower()=="true":
                 log.info(self.request.url+" => Status: 404 Not found")
             raise
+        # adjust headers
         file.headers["Cache-control"] = "no-cache"
+        file.headers["Pragma"] = "no-cache"
+        # set default mime type to text/html
+        name = self.request.subpath[-1]
+        if name.find(".")==-1 and settings.get("server.content_type"):
+            file.headers["Content-Type"] = settings.get("server.content_type")
+        
         # handle files based on extensions
         extensions = settings.get("filter.extensions")
         if not extensions:
