@@ -1,0 +1,58 @@
+[app:main]
+# the directory to be served. Either a python module asset path, relative path 
+# or absolute path
+static.directory = {{root}}
+static.defaultfile = index.html
+
+# The url prefix used to route request through the proxy. By default
+# urls starting with `http://127.0.0.1:5556/__proxy/` will be handled by the 
+# proxy
+proxy.route = {{proxy}}
+
+debugtoolbar.enabled = true
+debugtoolbar.panels =
+    pyramid_debugtoolbar.panels.headers.HeaderDebugPanel
+    pyramid_debugtoolbar.panels.request_vars.RequestVarsDebugPanel
+    pyramid_debugtoolbar.panels.performance.PerformanceDebugPanel
+    pyramid_debugtoolbar.panels.logger.LoggingPanel
+    pyramid_debugtoolbar.panels.settings.SettingsDebugPanel
+pyramid.includes = pyramid_debugtoolbar
+pyramid.default_locale_name = en
+
+use = call:outpost.server:main
+
+[server:main]
+use = egg:waitress#main
+host = {{host}}
+port = {{port}}
+
+
+
+# Begin logging configuration
+[loggers]
+keys = root, staticserver
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = INFO
+handlers = console
+
+[logger_staticserver]
+level = DEBUG
+handlers =
+qualname = staticserver
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[formatter_generic]
+format = %(asctime)s %(levelname)-5.5s [%(name)s][%(threadName)s] %(message)s
+# End logging configuration

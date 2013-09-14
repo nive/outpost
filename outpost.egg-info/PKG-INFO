@@ -1,0 +1,15 @@
+Metadata-Version: 1.1
+Name: outpost
+Version: 0.1
+Summary: Anti cors html application/webservice development server
+Home-page: http://cms.nive.co
+Author: Arndt Droullier, Nive GmbH
+Author-email: info@nive.co
+License: UNKNOWN
+Description: UNKNOWN
+Keywords: fileserver proxy development cors web pyramid pylons
+Platform: UNKNOWN
+Classifier: Programming Language :: Python
+Classifier: Framework :: Pylons
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Internet :: WWW/HTTP :: WSGI :: Application
