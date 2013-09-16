@@ -8,6 +8,8 @@ Use for local html application development with online webservice
 connection. To prevent browsers Cross Origin Resource Scripting
 all requests are routed through a single address.
 
+Static files can be run through filters before being send to the browser.
+
 Implemented in pure python; with the web framework pyramid.
 
 ## Features
@@ -15,6 +17,7 @@ Implemented in pure python; with the web framework pyramid.
 - Serves static files from a directory
 - Routes webservice requests through the proxy
 - Insert html snippets in served files
+- Filter support
 - Several logging and debugging tools
 - Easy installation, runs on any os
 

@@ -8,7 +8,7 @@ from pyramid.static import static_view
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.response import Response
 
-
+from filterinc import FILTER
 
 
 class FileServer(object):
@@ -35,7 +35,10 @@ class FileServer(object):
         file.headers["Cache-control"] = "no-cache"
         file.headers["Pragma"] = "no-cache"
         # set default mime type to text/html
-        name = self.request.subpath[-1]
+        if len(self.request.subpath):
+            name = self.request.subpath[-1]
+        else:
+            name = settings.get("server.defaultfile","")
         if name.find(".")==-1 and settings.get("server.content_type"):
             file.headers["Content-Type"] = settings.get("server.content_type")
         
@@ -44,7 +47,6 @@ class FileServer(object):
         if not extensions:
             return file
         extensions = extensions.replace("  "," ").split(" ")
-        name = self.request.subpath[-1]
         if name.find(".")==-1 and "<empty>" in extensions:
             return self.filter(file)
         for e in extensions:
@@ -56,18 +58,14 @@ class FileServer(object):
 
     def filter(self, file):
         """
-        the only one right now
+        Processes filters defined in the configuration
         """
         settings = self.request.registry.settings
         # load filter. 
-        insertfile = settings.get("filter.inserthead")
-        if not insertfile:
-            return file
-        with open(insertfile) as f:
-            data = f.read()
-        # process
-        contents = file.body
-        contents = contents.replace("</head>", data+"</head>")
-        file.body = contents
+        for f in FILTER:
+            conf = settings.get(f[0])
+            if not conf:
+                continue
+            file = f[1](file, settings)
         return file
         
