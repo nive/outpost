@@ -26,37 +26,37 @@ Implemented in pure python; with the web framework pyramid.
 (See server.ini)
 
 the directory to be served. Either a python module asset path, relative path 
-or absolute path ::
+or absolute path 
 
-  server.directory = {{root}}
-  server.defaultfile = index.html
-  server.log_notfound = True
-  server.content_type = text/html; charset=UTF-8
+    server.directory = {{root}}
+    server.defaultfile = index.html
+    server.log_notfound = True
+    server.content_type = text/html; charset=UTF-8
 
-filter configuration. filters are loaded based on file extensions ::
+filter configuration. filters are loaded based on file extensions 
 
-  filter.extensions = .html <empty>
+    filter.extensions = .html <empty>
 
 Points to a file and inserts the contents at the end of the <head>
-section of the served file. e.g. `files/header.html` ::
+section of the served file. e.g. `files/header.html` 
 
-  filter.appendhead = 
+    filter.appendhead = 
 
 Points to a file and inserts the contents at the end of the <body>
-section of the served file. e.g. `files/body.html` ::
+section of the served file. e.g. `files/body.html` 
 
-  filter.appendbody = 
+    filter.appendbody = 
 
 string replacement directive in json: e.g. 
-{"str": "old string", "new": "new string", "codepage": "utf-8"} ::
+{"str": "old string", "new": "new string", "codepage": "utf-8"}
 
-  filter.replacestr = 
+    filter.replacestr = 
 
 The url prefix used to route request through the proxy. By default
 urls starting with `http://127.0.0.1:5556/__proxy/` will be handled by the 
-proxy ::
+proxy
   
-  proxy.route = __proxy
+    proxy.route = __proxy
 
 
 ## Installation
