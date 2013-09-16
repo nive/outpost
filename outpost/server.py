@@ -10,24 +10,21 @@ from proxy import Proxy, ProxyUrlHandler
 from files import FileServer
 
 
+# delegate views to the file server and proxy server
+ 
 def callProxy(request):
-    """
-    proxy view function 
-    """
     url = ProxyUrlHandler(request.matchdict["subpath"])
     proxy = Proxy(url, request)
     return proxy.response()
 
 def serveFile(context, request):
-    """
-    send back file 
-    """
     server = FileServer(request.matchdict["subpath"], context, request)
     return server.response()
 
 
+# Main server function
+
 def main(global_config, **settings):
-    # Static server main function
     log = logging.getLogger()
 
     # settings
@@ -76,3 +73,8 @@ def main(global_config, **settings):
     logger.level = "error"
 
     return config.make_wsgi_app()
+
+
+class ConfigurationError(Exception):
+    """
+    """

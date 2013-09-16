@@ -11,22 +11,32 @@ requires = [
     'requests'
     ]
 
+try:
+    README = open(os.path.join(here, 'readme.md')).read()
+except:
+    README = ''
+
 setup(name='outpost',
       version='0.1',
       description='Anti cors html application/webservice development server',
-      long_description='',
+      long_description=README,
       classifiers=[
         "Programming Language :: Python",
-        "Framework :: Pylons",
-        "Topic :: Internet :: WWW/HTTP",
-        "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
+        "Framework :: Pyramid",
+        "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+        "Topic :: Software Development :: Testing",
+        "Development Status :: 3 - Alpha",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.3",
+        "License :: OSI Approved :: BSD License"
         ],
       author='Arndt Droullier, Nive GmbH',
       author_email='info@nive.co',
-      url='http://cms.nive.co',
-      keywords='fileserver proxy development cors web pyramid pylons',
+      url='http://www.nive.co',
+      keywords='server proxy development cors web pyramid',
       packages=find_packages(),
       include_package_data=True,
+      license='BSD 3',
       zip_safe=False,
       install_requires=requires,
       tests_require=requires,
