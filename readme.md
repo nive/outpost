@@ -1,8 +1,8 @@
 
-# Outpost - anti cors local html application/webservice development server 
+# Outpost - anti cors local html application development server 
 
-Includes a static file web server with integrated proxy based on
-url prefixes and debugging tools. 
+Provides a static file web server with integrated webservice proxy,
+filter options and debugging tools. 
 
 Use for local html application development with online webservice 
 connection. To prevent browsers Cross Origin Resource Scripting
@@ -23,7 +23,41 @@ Implemented in pure python; with the web framework pyramid.
 
 ## Configuration 
 
-See server.ini
+(See server.ini)
+
+the directory to be served. Either a python module asset path, relative path 
+or absolute path ::
+
+  server.directory = {{root}}
+  server.defaultfile = index.html
+  server.log_notfound = True
+  server.content_type = text/html; charset=UTF-8
+
+filter configuration. filters are loaded based on file extensions ::
+
+  filter.extensions = .html <empty>
+
+Points to a file and inserts the contents at the end of the <head>
+section of the served file. e.g. `files/header.html` ::
+
+  filter.appendhead = 
+
+Points to a file and inserts the contents at the end of the <body>
+section of the served file. e.g. `files/body.html` ::
+
+  filter.appendbody = 
+
+string replacement directive in json: e.g. 
+{"str": "old string", "new": "new string", "codepage": "utf-8"} ::
+
+  filter.replacestr = 
+
+The url prefix used to route request through the proxy. By default
+urls starting with `http://127.0.0.1:5556/__proxy/` will be handled by the 
+proxy ::
+  
+  proxy.route = __proxy
+
 
 ## Installation
 
