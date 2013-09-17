@@ -17,8 +17,9 @@ Implemented in pure python; with the web framework pyramid.
 - Serves static files from a directory
 - Routes webservice requests through the proxy
 - Insert html snippets in served files
-- Filter support
+- Interactive request hacking and tracing
 - Several logging and debugging tools
+- Filter support
 - Easy installation, runs on any os
 
 ## Configuration 
@@ -32,6 +33,13 @@ or absolute path
     server.defaultfile = index.html
     server.log_notfound = True
     server.content_type = text/html; charset=UTF-8
+
+Activate interactive commandline request tracing in python debugger. 
+Allows you to modify and pause requests before being returned to the browser.
+Takes a regular expression as parameter, the server breaks only if the re matches.
+e.g. \.html for html files.
+
+    server.trace = 
 
 filter configuration. filters are loaded based on file extensions. `empty` means 
 files without extension are filtered, too.
@@ -59,6 +67,12 @@ proxy
   
     proxy.route = __proxy
 
+Activate interactive commandline request tracing in python debugger. 
+Allows you to modify and pause calls to the webservice. Takes a regular
+expression as parameter, the server breaks only if the re matches.
+e.g. datastore/api/setItem.
+
+    proxy.trace = 
 
 ## Installation
 

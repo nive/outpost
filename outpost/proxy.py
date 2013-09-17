@@ -2,6 +2,8 @@
 import logging
 import requests
 import time
+import pdb
+import re
 
 from pyramid.response import Response
 
@@ -16,7 +18,9 @@ class Proxy(object):
 
     def response(self):
         log = logging.getLogger("proxy")
+        settings = self.request.registry.settings
         params = dict(self.request.params)
+        url = self.url.destUrl
         
         # prepare headers
         headers = {}
@@ -36,6 +40,9 @@ class Proxy(object):
         else:
             kwargs['data'] = params
 
+        # trace in debugger
+        if settings["proxy.trace"] and re.search(settings["proxy.trace"], self.url.destUrl):
+            pdb.set_trace()
         response = requests.request(self.request.method.lower(), self.url.destUrl, **kwargs)
         # status codes 200 - 299 are considered as success
         if response.status_code >= 200 and response.status_code < 300:

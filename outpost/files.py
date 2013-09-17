@@ -2,6 +2,8 @@
 import logging
 import time
 import os
+import pdb
+import re
 
 from pyramid.config import Configurator
 from pyramid.static import static_view
@@ -34,6 +36,9 @@ class FileServer(object):
         # adjust headers
         file.headers["Cache-control"] = "no-cache"
         file.headers["Pragma"] = "no-cache"
+        file.headers["Expires"] = "0"
+        if "Last-Modified" in file.headers:
+            del file.headers["Last-Modified"]
         # set default mime type to text/html
         if len(self.request.subpath):
             name = self.request.subpath[-1]
@@ -47,10 +52,16 @@ class FileServer(object):
         if not extensions:
             return file
         extensions = extensions.replace("  "," ").split(" ")
-        if name.find(".")==-1 and "<empty>" in extensions:
+        if name.find(".")==-1 and "<empty>" in extensions:   
+            # trace in debugger
+            if settings["server.trace"] and re.search(settings["server.trace"], url):
+                pdb.set_trace()
             return self.filter(file)
         for e in extensions:
             if name.endswith(e):
+                # trace in debugger
+                if settings["server.trace"] and re.search(settings["server.trace"], url):
+                    pdb.set_trace()
                 # run filter
                 return self.filter(file)
         return file
