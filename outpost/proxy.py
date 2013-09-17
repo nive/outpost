@@ -23,9 +23,12 @@ class Proxy(object):
         for h,v in self.request.headers.environ.items():
             if h.startswith("SERVER_") or h.startswith("wsgi") or h.startswith("bfg") or h.startswith("webob"):
                 continue
-            headers[h] = v
-        headers['HTTP_HOST'] = self.url.domainname
-        headers['PATH_INFO'] = self.url.path
+            if h.startswith("HTTP_"):
+                headers[h[5:]] = v
+            else:
+                headers[h] = v
+        headers["HOST"] = self.url.domainname
+        headers["INFO"] = self.url.path
 
         kwargs = {'headers': headers, 'cookies': self.request.cookies}
         if self.request.method.lower() == 'get':
