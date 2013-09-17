@@ -1,7 +1,7 @@
 
 # Outpost 
 
-## anti-cors-local-html-application development server 
+### anti-cors-local-html-application development server 
 
 Provides a static file web server with integrated webservice proxy,
 filter options and debugging tools. 
