@@ -5,6 +5,7 @@ server.directory = {{root}}
 server.defaultfile = index.html
 server.log_notfound = True
 server.content_type = text/html; charset=UTF-8
+
 # Activate interactive commandline request tracing in python debugger. 
 # Allows you to modify and pause requests before being returned to the browser.
 # Takes a regular expression as parameter, the server breaks only if the re matches.
@@ -50,7 +51,7 @@ use = call:outpost.server:main
 use = egg:waitress#main
 host = 127.0.0.1
 port = 5556
-
+threads = 2
 
 
 # Begin logging configuration
