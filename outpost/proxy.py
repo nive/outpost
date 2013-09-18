@@ -41,9 +41,12 @@ class Proxy(object):
             kwargs['data'] = params
 
         # trace in debugger
+        method = self.request.method.lower()
+        url = self.url.destUrl
+        headers = kwargs
         if settings["proxy.trace"] and re.search(settings["proxy.trace"], self.url.destUrl):
             pdb.set_trace()
-        response = requests.request(self.request.method.lower(), self.url.destUrl, **kwargs)
+        response = requests.request(method, url, **headers) #=> Ready to proxy the current request. Step once (n) to get the response.
         # status codes 200 - 299 are considered as success
         if response.status_code >= 200 and response.status_code < 300:
             body = self.url.rewriteUrls(response.content)

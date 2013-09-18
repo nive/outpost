@@ -56,14 +56,15 @@ class FileServer(object):
             # trace in debugger
             if settings["server.trace"] and re.search(settings["server.trace"], url):
                 pdb.set_trace()
-            return self.filter(file)
+            file = self.filter(file) #=> Ready to filter and return the current file. Step once (n) to apply filters.
+            return file
         for e in extensions:
             if name.endswith(e):
                 # trace in debugger
                 if settings["server.trace"] and re.search(settings["server.trace"], url):
                     pdb.set_trace()
-                # run filter
-                return self.filter(file)
+                file = self.filter(file)  #=> Ready to filter and return the current file. Step once (n) to apply filters.
+                return file
         return file
         
 

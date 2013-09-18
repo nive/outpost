@@ -12,7 +12,7 @@ all requests are routed through a single address.
 
 Static files can be run through filters before being send to the browser.
 
-Implemented in pure python; with the web framework pyramid.
+Implemented in pure python; with the pyramid web framework.
 
 ## Features
 
@@ -93,4 +93,4 @@ working directory.
 
 ## Release
 
-This is a alpha release several options are still missing. 
+This is a alpha release, though stable. And it is not meant to run as production server.
