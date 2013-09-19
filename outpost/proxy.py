@@ -34,17 +34,17 @@ class Proxy(object):
         headers["HOST"] = self.url.domainname
         headers["INFO"] = self.url.path
 
-        kwargs = {'headers': headers, 'cookies': self.request.cookies}
-        if self.request.method.lower() == 'get':
-            kwargs['params'] = params
+        kwargs = {"headers": headers, "cookies": self.request.cookies}
+        if self.request.method.lower() == "get":
+            kwargs["params"] = params
         else:
-            kwargs['data'] = params
+            kwargs["data"] = request.body
 
         # trace in debugger
         method = self.request.method.lower()
         url = self.url.destUrl
         headers = kwargs
-        if settings["proxy.trace"] and re.search(settings["proxy.trace"], self.url.destUrl):
+        if settings.get("proxy.trace") and re.search(settings["proxy.trace"], self.url.destUrl):
             pdb.set_trace()
         response = requests.request(method, url, **headers) #=> Ready to proxy the current request. Step once (n) to get the response.
         # status codes 200 - 299 are considered as success
@@ -69,6 +69,8 @@ class Proxy(object):
             del headers['content-encoding']
         if 'connection' in headers:
             del headers['connection']
+        if 'keep-alive' in headers:
+            del headers['keep-alive']
         
         # cookies
         if 'set-cookie' in headers:

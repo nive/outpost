@@ -24,9 +24,13 @@ class FileServer(object):
         log = logging.getLogger("files")
         settings = self.request.registry.settings
         url = self.request.url
-        static = static_view(root_dir=settings["server.directory"], 
-                             use_subpath=True, 
-                             index=settings.get("server.defaultfile"))
+        if settings.get("server.defaultfile"):
+            static = static_view(root_dir=settings["server.directory"], 
+                                 use_subpath=True, 
+                                 index=settings.get("server.defaultfile"))
+        else:
+            static = static_view(root_dir=settings["server.directory"], 
+                                 use_subpath=True)
         try:
             file = static(self.context, self.request)
         except HTTPNotFound, e:
@@ -54,14 +58,14 @@ class FileServer(object):
         extensions = extensions.replace("  "," ").split(" ")
         if name.find(".")==-1 and "<empty>" in extensions:   
             # trace in debugger
-            if settings["server.trace"] and re.search(settings["server.trace"], url):
+            if settings.get("server.trace") and re.search(settings["server.trace"], url):
                 pdb.set_trace()
             file = self.filter(file) #=> Ready to filter and return the current file. Step once (n) to apply filters.
             return file
         for e in extensions:
             if name.endswith(e):
                 # trace in debugger
-                if settings["server.trace"] and re.search(settings["server.trace"], url):
+                if settings.get("server.trace") and re.search(settings["server.trace"], url):
                     pdb.set_trace()
                 file = self.filter(file)  #=> Ready to filter and return the current file. Step once (n) to apply filters.
                 return file
