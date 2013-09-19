@@ -7,10 +7,12 @@ import re
 
 from pyramid.response import Response
 
-
-
+__session_cache__ = None
 
 class Proxy(object):
+    
+    # request session cache on module level, supports keep-alive connections
+    usesession = True
 
     def __init__(self, url, request):
         self.request = request
@@ -38,15 +40,24 @@ class Proxy(object):
         if self.request.method.lower() == "get":
             kwargs["params"] = params
         else:
-            kwargs["data"] = request.body
+            kwargs["data"] = self.request.body
 
+        # handle session if activated
+        if not self.usesession:
+            session = requests
+        else:
+            global __session_cache__
+            if not __session_cache__:
+                __session_cache__ = requests.Session()
+            session = __session_cache__
+            
         # trace in debugger
         method = self.request.method.lower()
         url = self.url.destUrl
         headers = kwargs
         if settings.get("proxy.trace") and re.search(settings["proxy.trace"], self.url.destUrl):
             pdb.set_trace()
-        response = requests.request(method, url, **headers) #=> Ready to proxy the current request. Step once (n) to get the response.
+        response = session.request(method, url, **headers) #=> Ready to proxy the current request. Step once (n) to get the response.
         # status codes 200 - 299 are considered as success
         if response.status_code >= 200 and response.status_code < 300:
             body = self.url.rewriteUrls(response.content)
