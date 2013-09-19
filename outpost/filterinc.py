@@ -1,6 +1,7 @@
 
 import json
 
+# quick and dirty string replacements
 
 def appendhead(file, settings):
     htmlfile = settings.get("filter.appendhead")

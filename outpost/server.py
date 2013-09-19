@@ -51,10 +51,8 @@ def main(global_config, **settings):
             proxyroute = "/"+proxyroute
         if not proxyroute.endswith("/"):
             proxyroute = proxyroute+"/"
-        log.info("Proxying requests" \
-                 " with prefix: " + proxyroute)
+        log.info("Proxying requests with prefix: " + proxyroute)
     
-    # This function creates the static server.
     config = Configurator(settings = settings)
 
     if proxyroute:
@@ -63,7 +61,6 @@ def main(global_config, **settings):
         config.add_view(callProxy, route_name="proxy", http_cache=0)
 
     # map the directory and disable caching
-    #config.add_static_view(name="", path=directory, cache_max_age=0)
     config.add_route("files", "/*subpath")
     config.add_view(serveFile, route_name="files")
 
@@ -72,6 +69,7 @@ def main(global_config, **settings):
     logger = logging.getLogger("requests.packages.urllib3.connectionpool")
     logger.level = "error"
 
+    # creates the static server
     return config.make_wsgi_app()
 
 
