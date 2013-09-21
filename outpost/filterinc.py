@@ -31,8 +31,11 @@ def replacestr(file, settings):
         return file
     conf = json.loads(conf)
     # process
-    codepage = conf.get("codepage", "utf-8") or "utf-8"
-    file.body = file.body.replace(conf["str"].encode(codepage), conf["new"].encode(codepage))
+    if not isinstance(conf, (list,tuple)):
+        conf = (conf,)
+    for repl in conf:
+        codepage = repl.get("codepage", "utf-8") or "utf-8"
+        file.body = file.body.replace(repl["str"].encode(codepage), repl["new"].encode(codepage))
     return file
 
 
