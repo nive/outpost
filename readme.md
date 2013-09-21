@@ -58,8 +58,8 @@ section of the served file. e.g. `files/body.html`
 
     filter.appendbody = 
 
-string replacement directive in json: e.g. 
-{"str": "old string", "new": "new string", "codepage": "utf-8"}
+string replacement directive in json (can also be a list of directives):  
+e.g. {"str": "old string", "new": "new string", "codepage": "utf-8"}
 
     filter.replacestr = 
 
