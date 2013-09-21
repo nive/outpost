@@ -17,7 +17,7 @@ except:
     README = ''
 
 setup(name='outpost',
-      version='0.2.1',
+      version='0.2.2',
       description='Anti cors html application/webservice development server',
       long_description=README,
       classifiers=[
