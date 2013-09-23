@@ -7,8 +7,11 @@ def appendhead(file, settings):
     htmlfile = settings.get("filter.appendhead")
     if not htmlfile:
         return file
-    with open(htmlfile) as f:
-        data = f.read()
+    try:
+        with open(htmlfile) as f:
+            data = f.read()
+    except IOError:
+        return file
     # process
     file.body = file.body.replace("</head>", data+"</head>")
     return file
@@ -18,8 +21,11 @@ def appendbody(file, settings):
     htmlfile = settings.get("filter.appendbody")
     if not htmlfile:
         return file
-    with open(htmlfile) as f:
-        data = f.read()
+    try:
+        with open(htmlfile) as f:
+            data = f.read()
+    except IOError:
+        return file
     # process
     file.body = file.body.replace("</body>", data+"</body>")
     return file
