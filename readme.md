@@ -3,12 +3,13 @@
 
 ### anti-cors-local-html-application development server 
 
-Provides a static file web server with integrated webservice proxy,
-filter options and debugging tools. 
+Outpost is a file server with integrated proxy, filter options and 
+debugging tools. 
 
-Use for local html application development with online webservice 
-connection. To prevent browsers Cross Origin Resource Scripting
-all requests are routed through a single address.
+It is meant to be used for local javascript application development 
+in combination with remote web api services. The build in proxy
+prevents browsers `Cross Origin Resource Scripting` restrictions
+by routing all requests through a single (local) address.
 
 Static files can be run through filters before being send to the browser.
 
