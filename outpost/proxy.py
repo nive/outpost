@@ -35,13 +35,15 @@ class Proxy(object):
                 headers[h] = v
         headers["HOST"] = self.url.domainname
         headers["INFO"] = self.url.path
+        if "CONTENT_LENGTH" in headers:
+            del headers["CONTENT_LENGTH"]
 
         kwargs = {"headers": headers, "cookies": self.request.cookies}
         if self.request.method.lower() == "get":
             kwargs["params"] = params
         else:
-            kwargs["data"] = self.request.body
-
+            kwargs["data"] = self.request.body #_file_raw.read()
+            print type(kwargs["data"])
         # handle session if activated
         if not self.usesession:
             session = requests
@@ -54,10 +56,10 @@ class Proxy(object):
         # trace in debugger
         method = self.request.method.lower()
         url = self.url.destUrl
-        headers = kwargs
+        parameter = kwargs
         if settings.get("proxy.trace") and re.search(settings["proxy.trace"], self.url.destUrl):
             pdb.set_trace()
-        response = session.request(method, url, **headers) #=> Ready to proxy the current request. Step once (n) to get the response.
+        response = session.request(method, url, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response.
         # status codes 200 - 299 are considered as success
         if response.status_code >= 200 and response.status_code < 300:
             body = self.url.rewriteUrls(response.content)
