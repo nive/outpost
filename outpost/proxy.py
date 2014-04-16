@@ -42,8 +42,8 @@ class Proxy(object):
         if self.request.method.lower() == "get":
             kwargs["params"] = params
         else:
-            kwargs["data"] = self.request.body #_file_raw.read()
-            print type(kwargs["data"])
+            kwargs["data"] = self.request.body
+
         # handle session if activated
         if not self.usesession:
             session = requests
