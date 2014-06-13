@@ -18,7 +18,7 @@ except:
 
 setup(name='outpost',
       version='0.2.2',
-      description='Anti cors html application/webservice development server',
+      description='Anti cors javascript application development server',
       long_description=README,
       classifiers=[
         "Programming Language :: Python",
