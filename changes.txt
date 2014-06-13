@@ -1,4 +1,8 @@
 
+0.2.2 release - June 2014
+-------------------------
+Many bugfixes and improvements.
+
 Sept. 2013
 ----------
 First release.

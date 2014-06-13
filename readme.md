@@ -1,7 +1,7 @@
 
 # Outpost 
 
-### anti-cors-local-html-application development server 
+### local-javascript-application development server 
 
 Outpost is a file server with integrated proxy, filter options and 
 debugging tools. 
@@ -14,6 +14,8 @@ by routing all requests through a single (local) address.
 Static files can be run through filters before being send to the browser.
 
 Implemented in pure python; with the pyramid web framework.
+
+Please refer to Github for source codes: https://github.com/nive/outpost
 
 ## Features
 
@@ -86,12 +88,12 @@ Short installation description:
 - Create a virtual environment (virtualenv) directory named ‘outpost’ (or use your projects name)
   ``virtualenv outpost``
 - Install outpost from pypi.python.org ``bin/pip install outpost``
-- Create a new project by using the scaffold ``bin/pcreate -t default myHtmlApp``
-- Start the web server ``bin/pserve myHtmlApp/server.ini`` 
+- Create a new project by using the scaffold ``bin/pcreate -t default myApp``
+- Start the web server ``bin/pserve myApp/server.ini`` 
 
 If you are using a relative directory please make sure you start the webserver from the right
 working directory.
 
 ## Release
 
-This is a alpha release, though stable. And it is not meant to run as production server.
+This is a beta release, though stable. And it is not meant to run as production server.
