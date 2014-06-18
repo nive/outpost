@@ -23,6 +23,8 @@ class DefaultTemplate(PyramidTemplate):
         if not vars['root']:
             vars['root'] = "files"
 
+        vars['domain'] = raw_input("Rewrite proxy requests to the following domain e.g. 'mydomain.nive.io' (default empty): ")
+
         #vars['proxy'] = raw_input("Proxy url prefix (default '__proxy'): ")
         #if not vars['proxy']:
         #    vars['proxy'] = "__proxy"

@@ -59,9 +59,8 @@ class Proxy(object):
             
         # trace in debugger
         method = self.request.method.lower()
-        url = self.url.destUrl
         parameter = kwargs
-        if settings.get("proxy.trace") and re.search(settings["proxy.trace"], self.url.destUrl):
+        if settings.get("proxy.trace") and re.search(settings["proxy.trace"], url):
             pdb.set_trace()
         response = session.request(method, url, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response.
         # status codes 200 - 299 are considered as success
@@ -132,7 +131,7 @@ class ProxyUrlHandler(object):
     defaultProtocol = "http"
     defaultPrefix = "/__proxy/"
     
-    def __init__(self, urlparts):
+    def __init__(self, urlparts, domain=None, placeholder=None):
         self.parts = urlparts     # urlparts is the source url in list form 
         self.prefix = self.defaultPrefix
         if not urlparts[0] in ("http","https"):
@@ -143,6 +142,9 @@ class ProxyUrlHandler(object):
             self.protocol = urlparts[0]
             self.domainname = urlparts[1]
             self.path = "/".join(urlparts[2:])
+        if placeholder and domain:
+            if self.domainname == placeholder:
+                self.domainname = domain
     
     def __str__(self):
         return self.destUrl

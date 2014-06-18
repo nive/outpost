@@ -1,4 +1,8 @@
 
+0.2.3
+-----
+added domain placeholder configuration option
+
 0.2.2 release - June 2014
 -------------------------
 Many bugfixes and improvements.

@@ -13,7 +13,10 @@ from files import FileServer
 # delegate views to the file server and proxy server
  
 def callProxy(request):
-    url = ProxyUrlHandler(request.matchdict["subpath"])
+    settings = request.registry.settings
+    ph = settings.get("proxy.domainplaceholder","__domain")
+    do = settings.get("proxy.domain")
+    url = ProxyUrlHandler(request.matchdict["subpath"], domain=do, placeholder=ph)
     proxy = Proxy(url, request)
     return proxy.response()
 
