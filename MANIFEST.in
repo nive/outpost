@@ -1,0 +1,3 @@
+include *.txt *.ini *.cfg *.md *.rst
+recursive-include outpost *
+global-exclude *.pyc 

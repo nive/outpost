@@ -62,19 +62,15 @@ class Proxy(object):
         parameter = kwargs
         if settings.get("proxy.trace") and re.search(settings["proxy.trace"], url):
             pdb.set_trace()
-        response = session.request(method, url, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response.
+        response = session.request(method, url, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response. (c) to continue. (Python debugger)
         # status codes 200 - 299 are considered as success
         if response.status_code >= 200 and response.status_code < 300:
             body = self.url.rewriteUrls(response.content)
             size = len(body)+len(str(response.raw.headers))
-            log.info(self.url.destUrl+" => Status: %s, %d bytes in %d ms" % (response.status_code, 
-                                                                             size, 
-                                                                             response.elapsed.microseconds/1000)) 
+            log.info(self.url.destUrl+" => Status: %s, %d bytes in %d ms" % (response.status_code, size, response.elapsed.microseconds/1000))
         else:
             body = response.content
-            log.info(self.url.destUrl+" => Status: %s %s, in %d ms" % (response.status_code, 
-                                                                       response.reason, 
-                                                                       response.elapsed.microseconds/1000)) 
+            log.info(self.url.destUrl+" => Status: %s %s, in %d ms" % (response.status_code, response.reason, response.elapsed.microseconds/1000))
 
         headers = dict(response.headers)
         if 'content-length' in headers:

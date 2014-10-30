@@ -17,7 +17,7 @@ except:
     README = ''
 
 setup(name='outpost',
-      version='0.2.5',
+      version='0.2.6',
       description='Local javascript application development server',
       long_description=README,
       classifiers=[
@@ -25,7 +25,7 @@ setup(name='outpost',
         "Framework :: Pyramid",
         "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
         "Topic :: Software Development :: Testing",
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.3",
         "License :: OSI Approved :: BSD License"
