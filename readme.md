@@ -11,7 +11,7 @@ in combination with remote web api services. The build in proxy
 prevents browsers `Cross Origin Resource Scripting` restrictions
 by routing all requests through a single (local) address.
 
-Static files can be run through filters before being send to the browser.
+Advanced options include request debugging and stream filter.
 
 Implemented in pure python; with the pyramid web framework.
 
@@ -27,44 +27,23 @@ Please refer to Github for source codes: https://github.com/nive/outpost
 - Filter support
 - Easy installation, runs on any os
 
-## Configuration 
 
-(See server.ini)
+## Configuration - Basic setup
 
-the directory to be served. Either a python module asset path, relative path 
+All configuration options are set in `server.ini` in projects' home folder.
+
+The directory to be served. Either a python module asset path, relative path 
 or absolute path 
 
-    server.directory = {{root}}
+    server.directory = /home/me/myfiles
     server.defaultfile = index.html
-    server.log_notfound = True
-    server.content_type = text/html; charset=UTF-8
 
-Activate interactive commandline request tracing in python debugger. 
-Allows you to modify and pause requests before being returned to the browser.
-Takes a regular expression as parameter, the server breaks only if the re matches.
-e.g. \.html for html files.
+The domain to connect to. Ajax calls and urls can use a domain
+placeholder to be inserted by outpost before proxying the request.
+By default the placeholder is '__domain'. The string will
+replaced with the following configuration setting.
 
-    server.trace = 
-
-filter configuration. filters are loaded based on file extensions. `empty` means 
-files without extension are filtered, too.
-
-    filter.extensions = .html <empty>
-
-Points to a file and inserts the contents at the end of the html-head
-section of the served file. e.g. `files/header.html` 
-
-    filter.appendhead = 
-
-Points to a file and inserts the contents at the end of the html-body
-section of the served file. e.g. `files/body.html` 
-
-    filter.appendbody = 
-
-string replacement directive in json (can also be a list of directives):  
-e.g. {"str": "old string", "new": "new string", "codepage": "utf-8"}
-
-    filter.replacestr = 
+    proxy.domain = mydomain.nive.io
 
 The url prefix used to route request through the proxy. By default
 urls starting with `http://127.0.0.1:5556/__proxy/` will be handled by the 
@@ -72,12 +51,6 @@ proxy
   
     proxy.route = __proxy
 
-Activate interactive commandline request tracing in python debugger. 
-Allows you to modify and pause calls to the webservice. Takes a regular
-expression as parameter, the server breaks only if the re matches.
-e.g. datastore/api/setItem.
-
-    proxy.trace = 
 
 ## Installation
 

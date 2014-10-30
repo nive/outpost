@@ -1,17 +1,47 @@
 [app:main]
-# the directory to be served. Either a python module asset path, relative path 
+
+#################################################################################
+# Basic setup
+#
+# the directory to be served. Either a python module asset path, relative path
 # or absolute path
 server.directory = {{root}}
 server.defaultfile = index.html
+
+# The domain to connect to. Ajax calls and urls can use a domain
+# placeholder to be inserted by outpost before proxying the request.
+# By default the placeholder is '__domain'. The string will
+# replaced with the following configuration setting.
+proxy.domain = {{domain}}
+
 server.log_notfound = True
 server.content_type = text/html; charset=UTF-8
 
+# The url prefix used to route request through the proxy. By default
+# urls starting with `http://127.0.0.1:5556/__proxy/` will be handled by the
+# proxy
+proxy.route = __proxy
+
+
+#################################################################################
+# Debugging options
+#
 # Activate interactive commandline request tracing in python debugger. 
 # Allows you to modify and pause requests before being returned to the browser.
 # Takes a regular expression as parameter, the server breaks only if the re matches.
 # e.g. \.html for html files.
 server.trace = 
 
+# Activate interactive commandline request tracing in python debugger.
+# Allows you to modify and pause calls to the webservice. Takes a regular
+# expression as parameter, the server breaks only if the re matches.
+# e.g. datastore/api/setItem.
+proxy.trace =
+
+
+#################################################################################
+# Filter and templating
+#
 # filter configuration. filters are loaded based on file extensions.
 # <empty> means files without extension are filtered, too.
 filter.extensions = .html <empty>
@@ -28,22 +58,11 @@ filter.appendbody =
 # e.g. {"str": "old string", "new": "new string", "codepage": "utf-8"}
 filter.replacestr = 
 
-# The domain to connect to. Ajax calls and urls can use a domain 
-# placeholder to be inserted by outpost before proxying the request.
-# By default the placeholder is '__domain'. The string will
-# replaced with the following configuration setting.
-proxy.domain = {{domain}}
 
-# The url prefix used to route request through the proxy. By default
-# urls starting with `http://127.0.0.1:5556/__proxy/` will be handled by the 
-# proxy
-proxy.route = __proxy
+#################################################################################
+# Server setup
 
-# Activate interactive commandline request tracing in python debugger. 
-# Allows you to modify and pause calls to the webservice. Takes a regular
-# expression as parameter, the server breaks only if the re matches.
-# e.g. datastore/api/setItem.
-proxy.trace = 
+use = call:outpost.server:main
 
 debugtoolbar.enabled = false
 debugtoolbar.panels =
@@ -55,7 +74,6 @@ debugtoolbar.panels =
 pyramid.includes = pyramid_debugtoolbar
 pyramid.default_locale_name = en
 
-use = call:outpost.server:main
 
 [server:main]
 use = egg:waitress#main

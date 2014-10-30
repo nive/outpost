@@ -1,2 +1,5 @@
 /outpost.egg-info
 /dist
+.idea/
+.project
+.pydevproject
