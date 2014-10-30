@@ -12,12 +12,12 @@ requires = [
     ]
 
 try:
-    README = open(os.path.join(here, 'readme.md')).read()
+    README = open(os.path.join(here, 'readme.rst')).read()
 except:
     README = ''
 
 setup(name='outpost',
-      version='0.2.3',
+      version='0.2.4',
       description='Local javascript application development server',
       long_description=README,
       classifiers=[

@@ -1,4 +1,8 @@
 
+0.2.4 - Oct 2014
+----------------
+- changed readme to rst format
+
 0.2.3 - Oct 2014
 ----------------
 - added domain placeholder configuration option
