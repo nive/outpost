@@ -1,7 +1,8 @@
 
-0.2.3
------
-added domain placeholder configuration option
+0.2.3 - Oct 2014
+----------------
+- added domain placeholder configuration option
+- doc update
 
 0.2.2 release - June 2014
 -------------------------
