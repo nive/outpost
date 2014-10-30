@@ -13,6 +13,12 @@ by routing all requests through a single (local) address.
 
 Advanced options include request debugging and stream filter.
 
+In combination with Chrome or Firefox browsers build in developer tools 
+Outpost gives a additional option to debug, alter and trace outgoing
+and incoming requests before being processed by the browser (or after the
+request has been send). Single requests can be stopped based on url 
+schemes and debugged on the commandline. 
+
 Implemented in pure python; with the pyramid web framework.
 
 Please refer to Github for source codes: https://github.com/nive/outpost
@@ -21,9 +27,10 @@ Please refer to Github for source codes: https://github.com/nive/outpost
 
 - Serves static files from a directory
 - Routes webservice requests through the proxy
-- Insert html snippets in served files
+- Supports sessions and cookies
+- Single and multiple concurrent connections
 - Interactive request hacking and tracing
-- Several logging and debugging tools
+- Insert html snippets in served files
 - Filter support
 - Easy installation, runs on any os
 
