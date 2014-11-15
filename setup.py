@@ -43,7 +43,7 @@ setup(name='outpost',
       test_suite="outpost",
       entry_points = """\
         [pyramid.scaffold]
-        default=outpost.scaffolds:DefaultTemplate
+        outpost=outpost.scaffolds:DefaultTemplate
       """
       )
 

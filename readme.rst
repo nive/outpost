@@ -72,7 +72,7 @@ Short installation description:
 - Create a virtual environment (virtualenv) directory named ‘outpost’ (or use your projects name)
   ``virtualenv outpost``
 - Install outpost from pypi.python.org ``bin/pip install outpost``
-- Create a new project by using the scaffold ``bin/pcreate -t default myApp``
+- Create a new project by using the scaffold ``bin/pcreate -t outpost myApp``
 - change into myApp directory ``cd myApp``
 - Start the web server ``../bin/pserve server.ini`` (the served directory path is relative)
 
