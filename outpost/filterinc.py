@@ -1,9 +1,12 @@
 
 import json
+import os
+
+from pyramid.renderers import render
 
 # quick and dirty string replacements
 
-def appendhead(file, settings):
+def appendhead(file, settings, request=None):
     htmlfile = settings.get("filter.appendhead")
     if not htmlfile:
         return file
@@ -17,7 +20,7 @@ def appendhead(file, settings):
     return file
 
 
-def appendbody(file, settings):
+def appendbody(file, settings, request=None):
     htmlfile = settings.get("filter.appendbody")
     if not htmlfile:
         return file
@@ -31,7 +34,7 @@ def appendbody(file, settings):
     return file
 
 
-def replacestr(file, settings):
+def replacestr(file, settings, request=None):
     conf = settings.get("filter.replacestr")
     if not conf:
         return file
@@ -45,9 +48,28 @@ def replacestr(file, settings):
     return file
 
 
+def template(file, settings, request=None):
+    tmpl = settings.get("filter.template")
+    # extend relative path
+    wd = os.getcwd()+os.sep
+    if tmpl.startswith("."+os.sep):
+        tmpl = wd + tmpl[2:]
+    elif tmpl.startswith(".."+os.sep):
+        tmpl = wd + tmpl
+        tmpl = os.path.normpath(tmpl)
+    elif tmpl.find(":") == -1 and not tmpl.startswith(os.sep):
+        tmpl = wd + tmpl
+    if not tmpl:
+        return file
+    values = {"content": file.unicode_body, "file": file}
+    file.unicode_body = render(tmpl, values, request=request)
+    return file
+
+
 # available filter sections ------------------------------------------------------------------------
 FILTER = (
-    ("filter.appendhead", appendhead), 
+    ("filter.template", template),
+    ("filter.appendhead", appendhead),
     ("filter.appendbody", appendbody), 
     ("filter.replacestr", replacestr)
 )

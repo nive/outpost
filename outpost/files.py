@@ -1,14 +1,10 @@
 
 import logging
-import time
-import os
 import pdb
 import re
 
-from pyramid.config import Configurator
 from pyramid.static import static_view
 from pyramid.httpexceptions import HTTPNotFound
-from pyramid.response import Response
 
 from filterinc import FILTER
 
@@ -77,11 +73,13 @@ class FileServer(object):
         Processes filters defined in the configuration
         """
         settings = self.request.registry.settings
-        # load filter. 
+        log = logging.getLogger("files")
+        # load filter.
         for f in FILTER:
             conf = settings.get(f[0])
             if not conf:
                 continue
-            file = f[1](file, settings)
+            log.info("applying filter: %s => %s, %s" % (self.request.url, f[0], conf))
+            file = f[1](file, settings, self.request)
         return file
         
