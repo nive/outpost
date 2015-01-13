@@ -1,10 +1,8 @@
 
 import logging
-import requests
 import os
 
 from pyramid.config import Configurator
-from pyramid.response import Response
 
 from proxy import Proxy, ProxyUrlHandler
 from files import FileServer
@@ -33,8 +31,8 @@ def main(global_config, **settings):
     # settings
     directory = settings.get("server.directory")
     if not directory:
-        raise ConfigurationError, "The directory to be served is missing. Please make sure 'server.directory = <...>'" \
-                                  " in the server.ini configuration file is set."
+        raise ConfigurationError("The directory to be served is missing. Please make sure 'server.directory = <...>'"
+                                 " in the server.ini configuration file is set.")
     proxyroute = settings.get("proxy.route")
 
     # extend relative directory
@@ -47,7 +45,7 @@ def main(global_config, **settings):
         
     log.info("Serving files from directory: " + directory)
     if not proxyroute:
-        log.info("Proxy not activated. To activate please make sure 'proxy.route = <...>' in the server.ini" \
+        log.info("Proxy not activated. To activate please make sure 'proxy.route = <...>' in the server.ini"
                  " configuration file is set.")
     else:
         if not proxyroute.startswith("/"):

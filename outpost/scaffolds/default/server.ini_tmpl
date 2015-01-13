@@ -62,7 +62,10 @@ filter.replacestr =
 #################################################################################
 # Server setup
 
-use = call:outpost.server:main
+pyramid.includes = pyramid_debugtoolbar
+pyramid.default_locale_name = en
+pyramid.reload_templates = true
+
 
 debugtoolbar.enabled = false
 debugtoolbar.panels =
@@ -71,8 +74,9 @@ debugtoolbar.panels =
     pyramid_debugtoolbar.panels.performance.PerformanceDebugPanel
     pyramid_debugtoolbar.panels.logger.LoggingPanel
     pyramid_debugtoolbar.panels.settings.SettingsDebugPanel
-pyramid.includes = pyramid_debugtoolbar
-pyramid.default_locale_name = en
+
+use = call:outpost.server:main
+
 
 
 [server:main]
