@@ -36,7 +36,7 @@ class Proxy(object):
             else:
                 headers[h] = v
         
-        headers["host"] = self.url.domainname
+        headers["host"] = self.url.host
         headers["info"] = self.url.path
         if "content-length" in headers:
             del headers["content-length"]
@@ -87,7 +87,7 @@ class Proxy(object):
         if 'set-cookie' in headers:
             cookie = headers['set-cookie']
             host = self.request.host.split(":")[0]
-            cookie = cookie.replace(str(self.url.domainname), host)
+            cookie = cookie.replace(str(self.url.host), host)
             headers['set-cookie'] = cookie
             
         proxy_response = Response(body=body, status=response.status_code)
@@ -102,17 +102,19 @@ class ProxyUrlHandler(object):
     
     e.g. the incoming Request/URL ::
 
-      http://localhost:5556/___proxy/http/test.nive.co/datastore/api/keys 
+        http://localhost:5556/datastore/api/keys
   
     will be translated to the destination url ::
   
-      http://test.nive.co/datastore/api/keys 
+        http://test.nive.io/datastore/api/keys
+
+    'http://test.nive.io' is looked up in the settings dict as `proxy.host`.
     
     Also urls in response bodies can be converted back to the source url.
     
     Attributes:
     - protocol: http or https
-    - domainname: without protocol, including port
+    - host: without protocol, including port
     - path: path without protocol and domain
     - destUrl: valid proxy destination url
     - destDomain: valid proxy destination domain
@@ -123,44 +125,107 @@ class ProxyUrlHandler(object):
     - rewriteUrls()
     
     """
-    defaultProtocol = "http"
-    defaultPrefix = "/__proxy/"
-    
-    def __init__(self, urlparts, domain=None, placeholder=None):
-        self.parts = urlparts     # urlparts is the source url in list form 
-        self.prefix = self.defaultPrefix
-        if not urlparts[0] in ("http","https"):
-            self.protocol = self.defaultProtocol
-            self.domainname = urlparts[0]
-            self.path = "/".join(urlparts[1:])
-        else:
-            self.protocol = urlparts[0]
-            self.domainname = urlparts[1]
-            self.path = "/".join(urlparts[2:])
-        if placeholder and domain:
-            if self.domainname == placeholder:
-                self.domainname = domain
-    
+    def __init__(self, request, settings):
+        self.host = settings.get("proxy.host")
+        self.protocol = settings.get("proxy.protocol") or "http"
+        self.path = request.path_info     # urlparts is the source url in list form
+        if not self.path.startswith("/"):
+            self.path = "/"+self.path
+
     def __str__(self):
         return self.destUrl
     
     @property
     def destUrl(self):
-        return "%s://%s/%s" % (self.protocol, self.domainname, self.path)
+        return "%s://%s%s" % (self.protocol, self.host, self.path)
 
     @property
     def srcUrl(self):
-        return "/%s/%s/%s" % (self.protocol, self.domainname, self.path)
+        return self.path
 
     @property
     def destDomain(self):
-        return "%s://%s" % (self.protocol, self.domainname)
+        return "%s://%s" % (self.protocol, self.host)
 
     @property
     def srcDomain(self):
-        return "/%s/%s" % (self.protocol, self.domainname)
+        return ""
     
     def rewriteUrls(self, body):
-        return body.replace(self.destDomain, self.prefix+self.srcDomain)
-        
+        return body.replace(self.destDomain, self.srcDomain)
+
+
+class VirtualPathProxyUrlHandler(object):
+    """
+    Handles proxied urls and converts them between source and destination.
+
+    e.g. the incoming Request/URL ::
+
+      http://localhost:5556/___proxy/http/test.nive.co/datastore/api/keys
+
+    will be translated to the destination url ::
+
+      http://test.nive.co/datastore/api/keys
+
+    Also urls in response bodies can be converted back to the source url.
+
+    Attributes:
+    - protocol: http or https
+    - domainname: without protocol, including port
+    - path: path without protocol and domain
+    - destUrl: valid proxy destination url
+    - destDomain: valid proxy destination domain
+    - srcUrl: embedded proxy url
+    - srcDomain: embedded proxy domain
+
+    Methods:
+    - rewriteUrls()
+
+    """
+    defaultProtocol = "http"
+    defaultPrefix = "/__proxy/"
+
+    def __init__(self, request, settings):
+        urlparts = request.matchdict["subpath"]     # urlparts is the source url in list form
+        host = settings.get("proxy.host")
+        placeholder = settings.get("proxy.domainplaceholder","__domain")
+        # bw 0.2.6
+        if host is None:
+            host = settings.get("proxy.domain")
+
+        self.prefix = self.defaultPrefix
+        if not urlparts[0] in ("http","https"):
+            self.protocol = self.defaultProtocol
+            self.host = urlparts[0]
+            self.path = "/".join(urlparts[1:])
+        else:
+            self.protocol = urlparts[0]
+            self.host = urlparts[1]
+            self.path = "/".join(urlparts[2:])
+        if placeholder and host:
+            if self.host == placeholder:
+                self.host = host
+
+    def __str__(self):
+        return self.destUrl
+
+    @property
+    def destUrl(self):
+        return "%s://%s/%s" % (self.protocol, self.host, self.path)
+
+    @property
+    def srcUrl(self):
+        return "/%s/%s/%s" % (self.protocol, self.host, self.path)
+
+    @property
+    def destDomain(self):
+        return "%s://%s" % (self.protocol, self.host)
+
+    @property
+    def srcDomain(self):
+        return "/%s/%s" % (self.protocol, self.host)
+
+    def rewriteUrls(self, body):
+        return body.replace(self.destDomain.encode("utf-8"), ("__proxy"+self.srcDomain).encode("utf-8"))
+
 

@@ -21,11 +21,11 @@ class FileServer(object):
         settings = self.request.registry.settings
         url = self.request.url
         if settings.get("server.defaultfile"):
-            static = static_view(root_dir=settings["server.directory"], 
+            static = static_view(root_dir=settings["files.directory"], 
                                  use_subpath=True, 
                                  index=settings.get("server.defaultfile"))
         else:
-            static = static_view(root_dir=settings["server.directory"], 
+            static = static_view(root_dir=settings["files.directory"], 
                                  use_subpath=True)
         try:
             file = static(self.context, self.request)
@@ -52,16 +52,20 @@ class FileServer(object):
         if not extensions:
             return file
         extensions = extensions.replace("  "," ").split(" ")
+        server_trace = settings.get("files.trace")
+        # bw 0.2.6 renamed setting
+        if server_trace is None:
+            server_trace = settings.get("server.trace")
         if name.find(".")==-1 and "<empty>" in extensions:   
             # trace in debugger
-            if settings.get("server.trace") and re.search(settings["server.trace"], url):
+            if server_trace and re.search(server_trace, url):
                 pdb.set_trace()
             file = self.filter(file) #=> Ready to filter and return the current file. Step once (n) to apply filters.
             return file
         for e in extensions:
             if name.endswith(e):
                 # trace in debugger
-                if settings.get("server.trace") and re.search(settings["server.trace"], url):
+                if server_trace and re.search(server_trace, url):
                     pdb.set_trace()
                 file = self.filter(file)  #=> Ready to filter and return the current file. Step once (n) to apply filters.
                 return file

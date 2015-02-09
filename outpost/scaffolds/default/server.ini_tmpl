@@ -5,23 +5,27 @@
 #
 # the directory to be served. Either a python module asset path, relative path
 # or absolute path
-server.directory = {{root}}
+files.directory = {{root}}
+
+# The url prefix used to route requests to the local file directory. By default
+# all urls not matching the proxy route will be handled by the file server.
+files.route = {{files}}
+
+
+# The host/domain to proxy requests to. This should be a fully qualified host
+# or domain name including optional port e.g. mydomain.nive.io.
+proxy.host = {{host}}
+proxy.protocol = http
+
+# The url prefix used to route requests through the proxy. Use any path spec e.g '/webapi'
+# to activate proxying for mathing urls. Urls are mapped 1:1 to the proxy host.
+# A special configuration value: Use `__proxy` as proxy.route value to insert a
+# virtual directory structure.
+proxy.route = {{proxy}}
+
 server.defaultfile = index.html
-
-# The domain to connect to. Ajax calls and urls can use a domain
-# placeholder to be inserted by outpost before proxying the request.
-# By default the placeholder is '__domain'. The string will
-# replaced with the following configuration setting.
-proxy.domain = {{domain}}
-
 server.log_notfound = True
 server.content_type = text/html; charset=UTF-8
-
-# The url prefix used to route request through the proxy. By default
-# urls starting with `http://127.0.0.1:5556/__proxy/` will be handled by the
-# proxy
-proxy.route = __proxy
-
 
 #################################################################################
 # Debugging options
@@ -30,7 +34,7 @@ proxy.route = __proxy
 # Allows you to modify and pause requests before being returned to the browser.
 # Takes a regular expression as parameter, the server breaks only if the re matches.
 # e.g. \.html for html files.
-server.trace = 
+files.trace =
 
 # Activate interactive commandline request tracing in python debugger.
 # Allows you to modify and pause calls to the webservice. Takes a regular
