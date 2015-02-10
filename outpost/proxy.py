@@ -1,31 +1,47 @@
-
+# Copyright 2015 Arndt Droullier, Nive GmbH. All rights reserved.
+# Released under BSD-license. See license.txt
+#
 import logging
 import requests
 import pdb
 import re
 
+from zope.interface import alsoProvides
+
 from pyramid.response import Response
+
+from outpost import filtermanager
+
 
 __session_cache__ = None
 
 class Proxy(object):
+    """
+    The Proxy class handles all requests forwarded to an external server.
+    The url must be an instance of a UrlHandler class.
+
+    It is currently only meant to connect to a single backend server and
+    supports keep-alives and cookie sessions.
+    """
     
     # request session cache on module level, supports keep-alive connections
     usesession = True
 
-    def __init__(self, url, request):
+    def __init__(self, url, request, debug):
         self.request = request
         self.url = url
+        self.debug = debug
 
     def response(self):
         log = logging.getLogger("proxy")
-        settings = self.request.registry.settings
-        params = dict(self.request.params)
+        request = self.request
+        settings = request.registry.settings
+        params = dict(request.params)
         url = self.url.destUrl
         
         # prepare headers
         headers = {}
-        for h,v in self.request.headers.environ.items():
+        for h,v in request.headers.environ.items():
             h = h.lower()
             if h.startswith("server_") or h.startswith("wsgi") or h.startswith("bfg") or h.startswith("webob"):
                 continue
@@ -41,11 +57,11 @@ class Proxy(object):
         if "content-length" in headers:
             del headers["content-length"]
 
-        kwargs = {"headers": headers, "cookies": self.request.cookies}
-        if self.request.method.lower() == "get":
+        kwargs = {"headers": headers, "cookies": request.cookies}
+        if request.method.lower() == "get":
             kwargs["params"] = params
         else:
-            kwargs["data"] = self.request.body
+            kwargs["data"] = request.body
 
         # handle session if activated
         if not self.usesession:
@@ -57,19 +73,21 @@ class Proxy(object):
             session = __session_cache__
             
         # trace in debugger
-        method = self.request.method.lower()
+        method = request.method.lower()
         parameter = kwargs
-        if settings.get("proxy.trace") and re.search(settings["proxy.trace"], url):
+        if self.debug and settings.get("proxy.trace") and re.search(settings["proxy.trace"], url):
             pdb.set_trace()
         response = session.request(method, url, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response. (c) to continue. (Python debugger)
         # status codes 200 - 299 are considered as success
-        if response.status_code >= 200 and response.status_code < 300:
+        if 200 <= response.status_code < 300:
             body = self.url.rewriteUrls(response.content)
             size = len(body)+len(str(response.raw.headers))
-            log.info(self.url.destUrl+" => %s: %s, %d bytes in %d ms" % (method.upper(), response.status_code, size, response.elapsed.microseconds/1000))
+            log.info(self.url.destUrl+" => %s: %s, %d bytes in %d ms" % (method.upper(), response.status_code, size,
+                                                                         response.elapsed.microseconds/1000))
         else:
             body = response.content
-            log.info(self.url.destUrl+" => %s: %s %s, in %d ms" % (method.upper(), response.status_code, response.reason, response.elapsed.microseconds/1000))
+            log.info(self.url.destUrl+" => %s: %s %s, in %d ms" % (method.upper(), response.status_code, response.reason,
+                                                                   response.elapsed.microseconds/1000))
 
         headers = dict(response.headers)
         if 'content-length' in headers:
@@ -86,13 +104,16 @@ class Proxy(object):
         # cookies
         if 'set-cookie' in headers:
             cookie = headers['set-cookie']
-            host = self.request.host.split(":")[0]
+            host = request.host.split(":")[0]
             cookie = cookie.replace(str(self.url.host), host)
             headers['set-cookie'] = cookie
             
         proxy_response = Response(body=body, status=response.status_code)
         proxy_response.headers.update(headers)
+        alsoProvides(proxy_response, filtermanager.IProxyRequest)
+        proxy_response = filtermanager.run(proxy_response, request)
         return proxy_response
+
 
 
 
@@ -226,6 +247,6 @@ class VirtualPathProxyUrlHandler(object):
         return "/%s/%s" % (self.protocol, self.host)
 
     def rewriteUrls(self, body):
-        return body.replace(self.destDomain.encode("utf-8"), ("__proxy"+self.srcDomain).encode("utf-8"))
+        return body.replace(self.destDomain.encode("utf-8"), ("/__proxy"+self.srcDomain).encode("utf-8"))
 
 

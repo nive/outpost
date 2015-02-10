@@ -1,12 +1,15 @@
-
+# Copyright 2015 Arndt Droullier, Nive GmbH. All rights reserved.
+# Released under BSD-license. See license.txt
+#
 import logging
 import os
+import json
 
 from pyramid.config import Configurator
 
-from proxy import Proxy, ProxyUrlHandler, VirtualPathProxyUrlHandler
-from files import FileServer
-
+from outpost.proxy import Proxy, ProxyUrlHandler, VirtualPathProxyUrlHandler
+from outpost.files import FileServer
+from outpost import filtermanager
 
 # delegate views to the file server and proxy server
  
@@ -18,11 +21,11 @@ def callProxy(request):
         url = VirtualPathProxyUrlHandler(request, settings)
     else:
         url = ProxyUrlHandler(request, settings)
-    proxy = Proxy(url, request)
+    proxy = Proxy(url, request, debug=settings.get("debug"))
     return proxy.response()
 
 def serveFile(context, request):
-    server = FileServer(request.matchdict["subpath"], context, request)
+    server = FileServer(request.matchdict["subpath"], context, request, debug=settings.get("debug"))
     return server.response()
 
 
@@ -32,6 +35,11 @@ def main(global_config, **settings):
     log = logging.getLogger()
 
     fileroute=proxyroute = None
+    debug = settings.get("debug")
+
+    # parse filter
+    fstr = settings.get("filter")
+    settings["filter"] = filtermanager.parseJsonString(fstr, exitOnTestFailure=not debug)
 
     # set up local file directory
     directory = settings.get("files.directory")
@@ -75,8 +83,9 @@ def main(global_config, **settings):
         log.info("Proxying requests with path prefix '%s' to '%s'", proxyroute, host)
 
     if directory and fileroute==proxyroute:
-        raise ConfigurationError("File and proxy routing is equal.")
+        raise filtermanager.ConfigurationError("File and proxy routing is equal.")
     
+    # setup pyramid configuration and routes
     config = Configurator(settings = settings)
 
     if proxyroute:
@@ -90,7 +99,7 @@ def main(global_config, **settings):
         config.add_view(serveFile, route_name="files")
 
     config.commit()
-        
+
     logger = logging.getLogger("requests.packages.urllib3.connectionpool")
     logger.level = "error"
 
@@ -98,6 +107,3 @@ def main(global_config, **settings):
     return config.make_wsgi_app()
 
 
-class ConfigurationError(Exception):
-    """
-    """

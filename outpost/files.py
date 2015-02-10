@@ -1,34 +1,48 @@
-
+# Copyright 2015 Arndt Droullier, Nive GmbH. All rights reserved.
+# Released under BSD-license. See license.txt
+#
 import logging
 import pdb
 import re
+from mimetypes import guess_type
 
 from pyramid.static import static_view
 from pyramid.httpexceptions import HTTPNotFound
 
-from filterinc import FILTER
+from zope.interface import alsoProvides
+
+from outpost import filtermanager
 
 
 class FileServer(object):
+    """
+    The file server handles local file serving based on the directory setting.
+    """
 
-    def __init__(self, url, context, request):
+    def __init__(self, url, context, request, debug):
         self.request = request
         self.context = context
         self.url = url
+        self.debug = debug
         
     def response(self):
         log = logging.getLogger("files")
         settings = self.request.registry.settings
         url = self.request.url
-        if settings.get("server.defaultfile"):
+        df = settings.get("files.defaultfile")
+        # bw 0.2.6
+        if df is None:
+            df = settings.get("server.defaultfile")
+        if df:
             static = static_view(root_dir=settings["files.directory"], 
                                  use_subpath=True, 
-                                 index=settings.get("server.defaultfile"))
+                                 index=df)
         else:
             static = static_view(root_dir=settings["files.directory"], 
                                  use_subpath=True)
         try:
             file = static(self.context, self.request)
+            alsoProvides(file, filtermanager.IFileRequest)
         except HTTPNotFound, e:
             if settings.get("server.log_notfound", "true").lower()=="true":
                 log.info(self.request.url+" => Status: 404 Not found")
@@ -43,47 +57,21 @@ class FileServer(object):
         if len(self.request.subpath):
             name = self.request.subpath[-1]
         else:
-            name = settings.get("server.defaultfile","")
-        if name.find(".")==-1 and settings.get("server.content_type"):
-            file.headers["Content-Type"] = settings.get("server.content_type")
+            name = df
+        ct = guess_type(name, strict=False) or settings.get("server.content_type")
+        file.headers["Content-Type"] = ct
+        file.content_type = ct
         
-        # handle files based on extensions
-        extensions = settings.get("filter.extensions")
-        if not extensions:
-            return file
-        extensions = extensions.replace("  "," ").split(" ")
         server_trace = settings.get("files.trace")
         # bw 0.2.6 renamed setting
         if server_trace is None:
             server_trace = settings.get("server.trace")
-        if name.find(".")==-1 and "<empty>" in extensions:   
-            # trace in debugger
-            if server_trace and re.search(server_trace, url):
-                pdb.set_trace()
-            file = self.filter(file) #=> Ready to filter and return the current file. Step once (n) to apply filters.
-            return file
-        for e in extensions:
-            if name.endswith(e):
-                # trace in debugger
-                if server_trace and re.search(server_trace, url):
-                    pdb.set_trace()
-                file = self.filter(file)  #=> Ready to filter and return the current file. Step once (n) to apply filters.
-                return file
+        # trace in debugger
+        if self.debug and server_trace and re.search(server_trace, url):
+            pdb.set_trace()
+        file = filtermanager.run(file, self.request) #=> Ready to filter and return the current file. Step once (n) to apply filters.
         return file
         
 
-    def filter(self, file):
-        """
-        Processes filters defined in the configuration
-        """
-        settings = self.request.registry.settings
-        log = logging.getLogger("files")
-        # load filter.
-        for f in FILTER:
-            conf = settings.get(f[0])
-            if not conf:
-                continue
-            log.info("applying filter: %s => %s, %s" % (self.request.url, f[0], conf))
-            file = f[1](file, settings, self.request)
-        return file
-        
+
+
