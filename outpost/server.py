@@ -25,6 +25,7 @@ def callProxy(request):
     return proxy.response()
 
 def serveFile(context, request):
+    settings = request.registry.settings
     server = FileServer(request.matchdict["subpath"], context, request, debug=settings.get("debug"))
     return server.response()
 
@@ -75,12 +76,11 @@ def main(global_config, **settings):
         log.info("Proxy target host empty ('proxy.host'). Request proxy disabled.")
     else:
         proxyroute = settings.get("proxy.route")
-        if proxyroute:
-            if not proxyroute.startswith("/"):
-                proxyroute = "/"+proxyroute
-            if not proxyroute.endswith("/"):
-                proxyroute += "/"
-        log.info("Proxying requests with path prefix '%s' to '%s'", proxyroute, host)
+        if not proxyroute.startswith("/"):
+            proxyroute = "/"+proxyroute
+        if not proxyroute.endswith("/"):
+            proxyroute += "/"
+        log.info("Proxying requests with path prefix %s to '%s'", proxyroute, host)
 
     if directory and fileroute==proxyroute:
         raise filtermanager.ConfigurationError("File and proxy routing is equal.")

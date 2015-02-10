@@ -58,17 +58,18 @@ class FileServer(object):
             name = self.request.subpath[-1]
         else:
             name = df
-        ct = guess_type(name, strict=False) or settings.get("server.content_type")
+        ct = guess_type(name, strict=False)[0] or settings.get("server.content_type")
         file.headers["Content-Type"] = ct
         file.content_type = ct
         
-        server_trace = settings.get("files.trace")
-        # bw 0.2.6 renamed setting
-        if server_trace is None:
-            server_trace = settings.get("server.trace")
-        # trace in debugger
-        if self.debug and server_trace and re.search(server_trace, url):
-            pdb.set_trace()
+        if self.debug:
+            server_trace = settings.get("files.trace")
+            # bw 0.2.6 renamed setting
+            if server_trace is None:
+                server_trace = settings.get("server.trace")
+            # trace in debugger
+            if server_trace and re.search(server_trace, url):
+                pdb.set_trace()
         file = filtermanager.run(file, self.request) #=> Ready to filter and return the current file. Step once (n) to apply filters.
         return file
         
