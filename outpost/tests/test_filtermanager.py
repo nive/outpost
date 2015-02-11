@@ -247,13 +247,13 @@ class RunTest(unittest.TestCase):
         response = filtermanager.applyFilter(fc, response, request, None)
         self.assert_(response.unicode_body=="<html><body>Updated!</body></html>")
 
-    def test_run(self):
+    def test_runpost(self):
         fc = filtermanager.FilterConf.fromDict(self.filter1)
         response = testing.DummyRequest().response
         response.unicode_body = u"<html><body></body></html>"
         request = testing.DummyRequest()
         request.registry.settings = {"filter": (fc,)}
-        response = filtermanager.run(response, request, None)
+        response = filtermanager.runPostHook(response, request, None)
         self.assert_(response.unicode_body=="<html><body>Updated!</body></html>")
 
     def test_lookup_file(self):
@@ -270,7 +270,7 @@ class RunTest(unittest.TestCase):
         directlyProvides(response, filtermanager.IFileRequest)
         request = testing.DummyRequest()
         request.registry.settings = {"filter": (fc,)}
-        filter = filtermanager.lookupFilter(response, request, None)
+        filter = filtermanager.lookupFilter("post", response, request, None)
         self.assert_(len(filter)==1)
 
     def test_lookup_proxy(self):
@@ -287,7 +287,7 @@ class RunTest(unittest.TestCase):
         directlyProvides(response, filtermanager.IProxyRequest)
         request = testing.DummyRequest()
         request.registry.settings = {"filter": (fc,)}
-        filter = filtermanager.lookupFilter(response, request, None)
+        filter = filtermanager.lookupFilter("post", response, request, None)
         self.assert_(len(filter)==1)
 
     def test_lookup_path(self):
@@ -304,11 +304,11 @@ class RunTest(unittest.TestCase):
         request = testing.DummyRequest()
         request.url = "http://localhost/files/index.html"
         request.registry.settings = {"filter": (fc,)}
-        filter = filtermanager.lookupFilter(response, request, None)
+        filter = filtermanager.lookupFilter("post", response, request, None)
         self.assert_(len(filter)==1)
 
         request.url = "http://localhost/files/image.png"
-        filter = filtermanager.lookupFilter(response, request, None)
+        filter = filtermanager.lookupFilter("post", response, request, None)
         self.assert_(len(filter)==0)
 
     def test_lookup_ct(self):
@@ -325,11 +325,11 @@ class RunTest(unittest.TestCase):
         response.content_type = "text/html"
         request = testing.DummyRequest()
         request.registry.settings = {"filter": (fc,)}
-        filter = filtermanager.lookupFilter(response, request, None)
+        filter = filtermanager.lookupFilter("post", response, request, None)
         self.assert_(len(filter)==1)
 
         response.content_type = "image/png"
-        filter = filtermanager.lookupFilter(response, request, None)
+        filter = filtermanager.lookupFilter("post", response, request, None)
         self.assert_(len(filter)==0)
 
 
@@ -349,5 +349,5 @@ class RunTest(unittest.TestCase):
         request = testing.DummyRequest()
         request.url = "http://localhost/files/index.html"
         request.registry.settings = {"filter": (fc,)}
-        filter = filtermanager.lookupFilter(response, request, None)
+        filter = filtermanager.lookupFilter("post", response, request, None)
         self.assert_(len(filter)==1)

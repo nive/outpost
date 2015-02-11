@@ -8,6 +8,7 @@ import gzip
 from StringIO import StringIO
 
 from pyramid.renderers import render
+from pyramid.response import Response
 
 
 def template(response, request, settings, url):
@@ -150,6 +151,58 @@ def compress(response, request, settings, url):
     zipped.seek(0)
     response.body = zipped.read()
     zipped.close()
+    return response
+
+
+__file_cache__ = {}
+
+def cache_write(response, request, settings, url):
+    """
+    Write response to cache
+    -----------------------
+    A simple ignorant python module level memory cache.
+
+    Example ini file section ::
+
+        filter = [
+          {"callable": "outpost.filterinc.cache_write",
+           "hook": "post",
+           "applyTo": "proxy",
+           "content_type": "text/",
+           "settings": {},
+           "name": "cache-write"}
+          ]
+
+    """
+    global __file_cache__
+    __file_cache__[str(url)] = (response.body, response.status_code, response.headers)
+    return response
+
+def cache_read(response, request, settings, url):
+    """
+    Read response from cache
+    -----------------------
+    A simple ignorant python module level memory cache.
+
+    Example ini file section ::
+
+        filter = [
+          {"callable": "outpost.filterinc.cache_read",
+           "hook": "pre",
+           "applyTo": "proxy",
+           "content_type": "text/",
+           "settings": {},
+           "name": "cache-read"}
+          ]
+
+    """
+    global __file_cache__
+    if not str(url) in __file_cache__:
+        return None
+    body, status_code, headers = __file_cache__[str(url)]
+    response = Response(body=body, status=status_code)
+    response.headers.update(headers)
+    #alsoProvides(response, filtermanager.IProxyRequest)
     return response
 
 

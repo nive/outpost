@@ -37,6 +37,7 @@ class FilterConf(object):
     Filter configuration class
 
     callable: points to the callable of the filter. A function, dotted path spec or class.
+    hook: hook the filter before (pre) or after (post) triggering the proxy or file server.
     applyTo: defines the reponse type to apply the filter to: `file`, `proxy`. `None` for both.
     mime: applies the filter only if the mime type of the response matches
     path: applies the filter only if the pyth of the request matches
@@ -64,6 +65,7 @@ class FilterConf(object):
     implements(IFilter)
 
     callable=None
+    hook="post"
     content_type=None
     path=None
     applyTo=None
@@ -108,10 +110,12 @@ class FilterConf(object):
         if self.path is not None:
             if not isinstance(self.path, basestring):
                 result.append("path should be None or a string! %s"% (repr(self.path)))
+        if not self.hook in ("post","pre"):
+            result.append("hook must be set to 'post' or 'pre'! %s"% (str(self.hook)))
         return result
 
 
-def run(response, request, url):
+def runPreHook(response, request, url):
     """
     Lookup and apply filters for response/request
 
@@ -120,16 +124,32 @@ def run(response, request, url):
     :param url:
     :return: response
     """
-    matched = lookupFilter(response, request, url)
+    matched = lookupFilter("pre", response, request, url)
     for ff in matched:
         response = applyFilter(ff, response, request, url)
     return response
 
 
-def lookupFilter(response, request, url):
+def runPostHook(response, request, url):
+    """
+    Lookup and apply filters for response/request
+
+    :param response:
+    :param request:
+    :param url:
+    :return: response
+    """
+    matched = lookupFilter("post", response, request, url)
+    for ff in matched:
+        response = applyFilter(ff, response, request, url)
+    return response
+
+
+def lookupFilter(hook, response, request, url):
     """
     Lookup a list of filters matching the current request and response
 
+    :param hook:
     :param request:
     :param response:
     :param url:
@@ -138,6 +158,9 @@ def lookupFilter(response, request, url):
     all = request.registry.settings["filter"]
     matched = []
     for ff in all:
+        # match response type
+        if ff.hook != hook:
+            continue
         # match response type
         if ff.applyTo:
             if not ff.applyTo.providedBy(response):
@@ -210,8 +233,8 @@ def parseJsonString(jsonstr, exitOnTestFailure=True):
                 log.error(f)
         else:
             ok.append(tf)
-            log.info("Loaded filter %s (%s) for %s %s %s"%(str(tf), repr(tf.callable),
-                                                           tf.applyTo or "", tf.content_type or "", tf.path or ""))
+            log.info("Loaded %s filter %s (%s) for %s %s %s"%(tf.hook, str(tf), repr(tf.callable),
+                                                              tf.applyTo or "", tf.content_type or "", tf.path or ""))
     if exitOnTestFailure and err:
         raise ConfigurationError("Invalid filter configurations found. See error log for details.")
     return ok

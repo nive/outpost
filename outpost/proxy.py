@@ -14,7 +14,6 @@ from outpost import filtermanager
 
 
 __session_cache__ = None
-__file_cache__ = {}
 
 class Proxy(object):
     """
@@ -39,18 +38,18 @@ class Proxy(object):
     def response(self):
         log = logging.getLogger("proxy")
         request = self.request
+
+        # run pre proxy request hooked filters
+        # if the filter returns a response and not None. The response is returned
+        # immediately
+        proxy_response = filtermanager.runPreHook(None, request, self.url)
+        if proxy_response:
+            print "hit "
+            return proxy_response
+
         settings = request.registry.settings
         params = dict(request.params)
         url = self.url.destUrl
-
-        # cache test
-        #if str(self.url) in __file_cache__:
-        #    body, status_code, headers = __file_cache__[str(self.url)]
-        #    proxy_response = Response(body=body, status=status_code)
-        #    proxy_response.headers.update(headers)
-        #    alsoProvides(proxy_response, filtermanager.IProxyRequest)
-        #    proxy_response = filtermanager.run(proxy_response, request, self.url)
-        #    return proxy_response
 
         # prepare headers
         headers = {}
@@ -122,11 +121,9 @@ class Proxy(object):
         proxy_response = Response(body=body, status=response.status_code)
         proxy_response.headers.update(headers)
         alsoProvides(proxy_response, filtermanager.IProxyRequest)
-        proxy_response = filtermanager.run(proxy_response, request, self.url)
 
-        # cache test
-        #if not str(self.url) in __file_cache__:
-        #    __file_cache__[str(self.url)] = (body, response.status_code, headers)
+        # run post proxy request hooked filters
+        proxy_response = filtermanager.runPostHook(proxy_response, request, self.url)
 
         return proxy_response
 

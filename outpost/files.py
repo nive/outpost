@@ -29,6 +29,15 @@ class FileServer(object):
         log = logging.getLogger("files")
         settings = self.request.registry.settings
         url = self.request.url
+
+        # run pre proxy request hooked filters
+        # if the filter returns a response and not None. The response is returned
+        # immediately
+        proxy_response = filtermanager.runPreHook(None, self.request, self.url)
+        if proxy_response:
+            return proxy_response
+
+
         df = settings.get("files.defaultfile")
         # bw 0.2.6
         if df is None:
@@ -70,6 +79,8 @@ class FileServer(object):
             # trace in debugger
             if server_trace and re.search(server_trace, url):
                 pdb.set_trace()
+
+        # run post file server hooked filters
         file = filtermanager.run(file, self.request, self.url) #=> Ready to filter and return the current file. Step once (n) to apply filters.
         return file
         
