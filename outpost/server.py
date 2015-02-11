@@ -91,7 +91,7 @@ def main(global_config, **settings):
     if proxyroute:
         # handle all /proxy/... urls by the proxy server
         config.add_route("proxy", proxyroute+"*subpath")
-        config.add_view(callProxy, route_name="proxy", http_cache=0)
+        config.add_view(callProxy, route_name="proxy")
 
     # map the directory and disable caching
     if directory:

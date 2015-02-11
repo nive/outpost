@@ -70,7 +70,7 @@ class FileServer(object):
             # trace in debugger
             if server_trace and re.search(server_trace, url):
                 pdb.set_trace()
-        file = filtermanager.run(file, self.request) #=> Ready to filter and return the current file. Step once (n) to apply filters.
+        file = filtermanager.run(file, self.request, self.url) #=> Ready to filter and return the current file. Step once (n) to apply filters.
         return file
         
 

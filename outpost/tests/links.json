@@ -1,7 +1,7 @@
 {
-"host":"http://192.168.1.10:5557",
-"loops":20,
-"clients":10,
+"host":"http://192.168.1.3",
+"loops":10,
+"clients":5,
 "links": [
 "file01.html",
 "file02.html",

@@ -1,12 +1,12 @@
 import requests
 import json
 import sys
-import threading
 import logging
 import time
 
+import multiprocessing
 
-class ClientRunner(threading.Thread):
+class ClientRunner(multiprocessing.Process):
     name = ""
     loops = 0
     delay = 0
@@ -14,7 +14,6 @@ class ClientRunner(threading.Thread):
     options = {}
     links = ()
     parameter = {}
-    stats = None
 
     def run(self):
         self.stats = None
@@ -25,7 +24,7 @@ class ClientRunner(threading.Thread):
             #log.info("%s loop #%02d"%(self.name,i+1))
             stats.append(self.linklist())
         #log.info("%s finished"%self.name)
-        self.stats = stats
+        self._kwargs["result"].put(stats)
 
     def linklist(self):
         stats = []
@@ -43,12 +42,14 @@ class ClientRunner(threading.Thread):
                     response.status_code,
                     response.elapsed.microseconds/1000.0/1000.0,
                     len(response.content)+len(str(response.raw.headers)),
+                    response.raw.tell(),
                     response.reason
             )
         except requests.exceptions.ConnectionError, e:
             return (link,
                     999,
                     time.time()-t,
+                    0,
                     0,
                     str(e)
             )
@@ -72,7 +73,7 @@ def report(stats, runtime):
                 if not file in files:
                     files[file] = []
                 files[file].append(req[2])
-                dl += req[3]
+                dl += req[4]
                 if not file in sizes:
                     sizes[file] = req[3]
 
@@ -121,8 +122,9 @@ def run(links):
             normalized.append(l)
 
     cthreads = []
+    result_queue = multiprocessing.Queue()
     for i in range(clients):
-        cc = ClientRunner()
+        cc = ClientRunner(kwargs={"result":result_queue})
         cc.name = "client#%02d"%i
         cc.loops = loops
         cc.delay = delay
@@ -134,14 +136,11 @@ def run(links):
     for cc in cthreads:
         cc.start()
 
-    for cc in cthreads:
-        cc.join()
-
-    time.sleep(0.5)
     stats = []
-    for cc in cthreads:
-        stats.append(cc.stats)
-    report(stats, time.time()-runtime+0.5)
+    while len(stats)<len(cthreads):
+        stats.append(result_queue.get())
+
+    report(stats, time.time()-runtime-0.5)
 
 
 

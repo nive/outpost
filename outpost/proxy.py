@@ -14,6 +14,7 @@ from outpost import filtermanager
 
 
 __session_cache__ = None
+__file_cache__ = {}
 
 class Proxy(object):
     """
@@ -22,6 +23,9 @@ class Proxy(object):
 
     It is currently only meant to connect to a single backend server and
     supports keep-alives and cookie sessions.
+
+    The proxy reads the backend servers response completely into memory.
+    Streaming is currently not supported.
     """
     
     # request session cache on module level, supports keep-alive connections
@@ -38,7 +42,16 @@ class Proxy(object):
         settings = request.registry.settings
         params = dict(request.params)
         url = self.url.destUrl
-        
+
+        # cache test
+        #if str(self.url) in __file_cache__:
+        #    body, status_code, headers = __file_cache__[str(self.url)]
+        #    proxy_response = Response(body=body, status=status_code)
+        #    proxy_response.headers.update(headers)
+        #    alsoProvides(proxy_response, filtermanager.IProxyRequest)
+        #    proxy_response = filtermanager.run(proxy_response, request, self.url)
+        #    return proxy_response
+
         # prepare headers
         headers = {}
         for h,v in request.headers.environ.items():
@@ -57,11 +70,11 @@ class Proxy(object):
         if "content-length" in headers:
             del headers["content-length"]
 
-        kwargs = {"headers": headers, "cookies": request.cookies}
+        parameter = {"headers": headers, "cookies": request.cookies}
         if request.method.lower() == "get":
-            kwargs["params"] = params
+            parameter["params"] = params
         else:
-            kwargs["data"] = request.body
+            parameter["data"] = request.body
 
         # handle session if activated
         if not self.usesession:
@@ -74,20 +87,18 @@ class Proxy(object):
             
         # trace in debugger
         method = request.method.lower()
-        parameter = kwargs
         if self.debug and settings.get("proxy.trace") and re.search(settings["proxy.trace"], url):
             pdb.set_trace()
         response = session.request(method, url, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response. (c) to continue. (Python debugger)
+        body = response.content
         # status codes 200 - 299 are considered as success
         if 200 <= response.status_code < 300:
-            body = self.url.rewriteUrls(response.content)
             size = len(body)+len(str(response.raw.headers))
             log.debug(self.url.destUrl+" => %s: %s, %d bytes in %d ms" % (method.upper(), response.status_code, size,
-                                                                         response.elapsed.microseconds/1000))
+                                                                          response.elapsed.microseconds/1000))
         else:
-            body = response.content
             log.debug(self.url.destUrl+" => %s: %s %s, in %d ms" % (method.upper(), response.status_code, response.reason,
-                                                                   response.elapsed.microseconds/1000))
+                                                                    response.elapsed.microseconds/1000))
 
         headers = dict(response.headers)
         if 'content-length' in headers:
@@ -111,7 +122,12 @@ class Proxy(object):
         proxy_response = Response(body=body, status=response.status_code)
         proxy_response.headers.update(headers)
         alsoProvides(proxy_response, filtermanager.IProxyRequest)
-        proxy_response = filtermanager.run(proxy_response, request)
+        proxy_response = filtermanager.run(proxy_response, request, self.url)
+
+        # cache test
+        #if not str(self.url) in __file_cache__:
+        #    __file_cache__[str(self.url)] = (body, response.status_code, headers)
+
         return proxy_response
 
 

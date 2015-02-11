@@ -111,26 +111,28 @@ class FilterConf(object):
         return result
 
 
-def run(response, request):
+def run(response, request, url):
     """
     Lookup and apply filters for response/request
 
     :param response:
     :param request:
+    :param url:
     :return: response
     """
-    matched = lookupFilter(response, request)
+    matched = lookupFilter(response, request, url)
     for ff in matched:
-        response = applyFilter(ff, response, request)
+        response = applyFilter(ff, response, request, url)
     return response
 
 
-def lookupFilter(response, request):
+def lookupFilter(response, request, url):
     """
     Lookup a list of filters matching the current request and response
 
     :param request:
     :param response:
+    :param url:
     :return: list of filters
     """
     all = request.registry.settings["filter"]
@@ -152,19 +154,20 @@ def lookupFilter(response, request):
     return matched
 
 
-def applyFilter(filter, response, request):
+def applyFilter(filter, response, request, url):
     """
     Applies a single filter returned by `lookupFilter`
 
     :param filter:
     :param request:
     :param response:
+    :param url:
     :return: response
     """
     # load filter.
     log = logging.getLogger("filter")
-    log.info("%s => %s" % (request.url, filter.name))
-    response = filter.callable(response, request, filter.settings)
+    log.debug("%s => %s" % (str(url), filter.name))
+    response = filter.callable(response, request, filter.settings, url)
     return response
 
 
