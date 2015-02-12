@@ -84,6 +84,7 @@ class Proxy(object):
             session = requests
 
         # trace in debugger
+        method = request.method
         if self.debug and settings.get("proxy.trace") and re.search(settings["proxy.trace"], url):
             pdb.set_trace()
         response = session.request(method, url, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response. (c) to continue. (Python debugger)
