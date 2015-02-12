@@ -44,7 +44,6 @@ class Proxy(object):
         # immediately
         proxy_response = filtermanager.runPreHook(None, request, self.url)
         if proxy_response:
-            print "hit "
             return proxy_response
 
         settings = request.registry.settings
@@ -76,28 +75,27 @@ class Proxy(object):
             parameter["data"] = request.body
 
         # handle session if activated
-        if not self.usesession:
-            session = requests
-        else:
+        if self.usesession:
             global __session_cache__
             if not __session_cache__:
                 __session_cache__ = requests.Session()
             session = __session_cache__
-            
+        else:
+            session = requests
+
         # trace in debugger
-        method = request.method.lower()
         if self.debug and settings.get("proxy.trace") and re.search(settings["proxy.trace"], url):
             pdb.set_trace()
         response = session.request(method, url, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response. (c) to continue. (Python debugger)
         body = response.content
         # status codes 200 - 299 are considered as success
         if 200 <= response.status_code < 300:
-            size = len(body)+len(str(response.raw.headers))
-            log.debug(self.url.destUrl+" => %s: %s, %d bytes in %d ms" % (method.upper(), response.status_code, size,
-                                                                          response.elapsed.microseconds/1000))
+            size = response.raw.tell()
+            log.debug("%s => %s: %s, %d bytes in %d ms" % (self.url.destUrl, method, response.status_code, size,
+                                                           response.elapsed.microseconds/1000))
         else:
-            log.debug(self.url.destUrl+" => %s: %s %s, in %d ms" % (method.upper(), response.status_code, response.reason,
-                                                                    response.elapsed.microseconds/1000))
+            log.debug("%s => %s: %s %s, in %d ms" % (self.url.destUrl, method, response.status_code, response.reason,
+                                                     response.elapsed.microseconds/1000))
 
         headers = dict(response.headers)
         if 'content-length' in headers:

@@ -90,7 +90,11 @@ class FilterConf(object):
             base = caller_package()
             cc = DottedNameResolver(base).resolve(fc.callable)
             fc.callable = cc
-
+        # compile path and content_type regex if set
+        if fc.path:
+            fc.path = re.compile(fc.path)
+        if fc.content_type:
+            fc.content_type = re.compile(fc.content_type)
         return fc
 
     def __str__(self):
@@ -104,12 +108,6 @@ class FilterConf(object):
         result = []
         if not callable(self.callable):
             result.append("Filter callable is *not* a callable! %s"% (repr(self.callable)))
-        if self.content_type is not None:
-            if not isinstance(self.content_type, basestring):
-                result.append("content_type should be None or a string! %s"% (repr(self.content_type)))
-        if self.path is not None:
-            if not isinstance(self.path, basestring):
-                result.append("path should be None or a string! %s"% (repr(self.path)))
         if not self.hook in ("post","pre"):
             result.append("hook must be set to 'post' or 'pre'! %s"% (str(self.hook)))
         return result
@@ -167,11 +165,11 @@ def lookupFilter(hook, response, request, url):
                 continue
         # match path
         if ff.path:
-            if not re.search(ff.path, request.url):
+            if not ff.path.search(request.url):
                 continue
         # match content type
         if ff.content_type:
-            if not re.search(ff.content_type, response.content_type):
+            if not ff.content_type.search(response.content_type):
                 continue
         matched.append(ff)
     return matched
@@ -233,8 +231,8 @@ def parseJsonString(jsonstr, exitOnTestFailure=True):
                 log.error(f)
         else:
             ok.append(tf)
-            log.info("Loaded %s filter %s (%s) for %s %s %s"%(tf.hook, str(tf), repr(tf.callable),
-                                                              tf.applyTo or "", tf.content_type or "", tf.path or ""))
+            log.info("Loaded %s filter %s (%s) for %s"%(tf.hook, str(tf), repr(tf.callable),
+                                                              tf.applyTo or ""))
     if exitOnTestFailure and err:
         raise ConfigurationError("Invalid filter configurations found. See error log for details.")
     return ok

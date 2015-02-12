@@ -13,6 +13,7 @@ from zope.interface import alsoProvides
 
 from outpost import filtermanager
 
+__ct_cache__ = {}
 
 class FileServer(object):
     """
@@ -49,13 +50,9 @@ class FileServer(object):
         else:
             static = static_view(root_dir=settings["files.directory"], 
                                  use_subpath=True)
-        try:
-            file = static(self.context, self.request)
-            alsoProvides(file, filtermanager.IFileRequest)
-        except HTTPNotFound, e:
-            if settings.get("server.log_notfound", "true").lower()=="true":
-                log.info(self.request.url+" => Status: 404 Not found")
-            raise
+        file = static(self.context, self.request)
+        alsoProvides(file, filtermanager.IFileRequest)
+
         # adjust headers
         file.headers["Cache-control"] = "no-cache"
         file.headers["Pragma"] = "no-cache"
@@ -67,7 +64,16 @@ class FileServer(object):
             name = self.request.subpath[-1]
         else:
             name = df
-        ct = guess_type(name, strict=False)[0] or settings.get("server.content_type")
+
+        # cache content type
+        global __ct_cache__
+        ext = ".".join(name.split(".")[1:])
+        if ext in __ct_cache__:
+            ct = __ct_cache__
+        else:
+            ct = guess_type(name, strict=False)[0] or settings.get("server.content_type")
+            __ct_cache__[ext] = ct
+
         file.headers["Content-Type"] = ct
         file.content_type = ct
         

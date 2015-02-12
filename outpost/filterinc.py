@@ -175,6 +175,7 @@ def cache_write(response, request, settings, url):
 
     """
     global __file_cache__
+    # todo handle request type if response is none
     __file_cache__[str(url)] = (response.body, response.status_code, response.headers)
     return response
 
@@ -202,6 +203,7 @@ def cache_read(response, request, settings, url):
     body, status_code, headers = __file_cache__[str(url)]
     response = Response(body=body, status=status_code)
     response.headers.update(headers)
+    # todo handle request type if cached
     #alsoProvides(response, filtermanager.IProxyRequest)
     return response
 

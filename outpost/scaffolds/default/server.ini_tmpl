@@ -23,7 +23,6 @@ proxy.protocol = http
 # virtual directory structure.
 proxy.route = {{proxy}}
 
-server.log_notfound = True
 server.content_type = text/html; charset=UTF-8
 
 #################################################################################
