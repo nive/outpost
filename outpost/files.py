@@ -87,7 +87,7 @@ class FileServer(object):
                 pdb.set_trace()
 
         # run post file server hooked filters
-        file = filtermanager.run(file, self.request, self.url) #=> Ready to filter and return the current file. Step once (n) to apply filters.
+        file = filtermanager.runPostHook(file, self.request, self.url) #=> Ready to filter and return the current file. Step once (n) to apply filters.
         return file
         
 
