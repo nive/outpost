@@ -69,13 +69,14 @@ class FileServer(object):
         global __ct_cache__
         ext = ".".join(name.split(".")[1:])
         if ext in __ct_cache__:
-            ct = __ct_cache__
+            ct = __ct_cache__[ext]
         else:
             ct = guess_type(name, strict=False)[0] or settings.get("server.content_type")
             __ct_cache__[ext] = ct
 
         file.headers["Content-Type"] = ct
         file.content_type = ct
+        file.charset = settings.get("files.charset") or "utf-8"
         
         if self.debug:
             server_trace = settings.get("files.trace")
