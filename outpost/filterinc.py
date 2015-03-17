@@ -1,9 +1,7 @@
 # Copyright 2015 Arndt Droullier, Nive GmbH. All rights reserved.
 # Released under BSD-license. See license.txt
 #
-import json
 import os
-import time
 import gzip
 
 from StringIO import StringIO
@@ -30,6 +28,7 @@ def template(response, request, settings, url):
     Settings ::
 
         template: the template path
+        values: additional values passed to the templates namespace
 
     Example ini file section ::
 
@@ -38,7 +37,7 @@ def template(response, request, settings, url):
            "apply_to": "proxy",
            "content_type": "text/html",
            "path": "\.html",
-           "settings": {"template": "../templates/main.pt"},
+           "settings": {"template": "../templates/main.pt", "values": {}},
            "name": "HTML filter example"}
           ]
 
@@ -58,6 +57,9 @@ def template(response, request, settings, url):
     if not tmpl:
         return response
     values = {"content": response.unicode_body, "response": response}
+    v2 = settings.get("values")
+    if v2 and isinstance(v2, dict):
+        values.update(v2)
     response.unicode_body = render(tmpl, values, request=request)
     return response
 
