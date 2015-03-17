@@ -10,7 +10,6 @@ files.directory = {{root}}
 # The url prefix used to route requests to the local file directory. By default
 # all urls not matching the proxy route will be handled by the file server.
 files.route = {{files}}
-files.defaultfile = index.html
 
 # The host/domain to proxy requests to. This should be a fully qualified host
 # or domain name including optional port e.g. mydomain.nive.io.
@@ -23,6 +22,7 @@ proxy.protocol = http
 # virtual directory structure.
 proxy.route = {{proxy}}
 
+server.default_path = index.html
 server.content_type = text/html; charset=UTF-8
 
 #################################################################################
@@ -32,7 +32,7 @@ server.content_type = text/html; charset=UTF-8
 #
 #  filter = [
 #    {"callable": "outpost.filterinc.replacestr",
-#     "applyTo": "proxy",
+#     "apply_to": "proxy",
 #     "content_type": "text/html",
 #     "settings": {"str": "My Title", "new": "HUAH"},
 #     "name": "strfilter"}

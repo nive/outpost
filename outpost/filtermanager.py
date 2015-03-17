@@ -38,7 +38,7 @@ class FilterConf(object):
 
     callable: points to the callable of the filter. A function, dotted path spec or class.
     hook: hook the filter before (pre) or after (post) triggering the proxy or file server.
-    applyTo: defines the reponse type to apply the filter to: `file`, `proxy`. `None` for both.
+    apply_to: defines the reponse type to apply the filter to: `file`, `proxy`. `None` for both.
     mime: applies the filter only if the mime type of the response matches
     path: applies the filter only if the pyth of the request matches
     settings: individual filter settings
@@ -56,7 +56,7 @@ class FilterConf(object):
 
         htmlfilter = FilterConf(
             callable = runfilter,
-            applyTo = "proxy",
+            apply_to = "proxy",
             content_type = "text/html",
             settings = {"insert text": "Filtered!"},
             name = "HTML filter example"
@@ -68,7 +68,7 @@ class FilterConf(object):
     hook="post"
     content_type=None
     path=None
-    applyTo=None
+    apply_to=None
     settings=None
     name=""
 
@@ -80,11 +80,11 @@ class FilterConf(object):
         fc = FilterConf()
         fc.__dict__.update(conf)
         # replace strings with interfaces
-        if fc.applyTo:
-            if fc.applyTo=="file":
-                fc.applyTo = IFileRequest
-            elif fc.applyTo=="proxy":
-                fc.applyTo = IProxyRequest
+        if fc.apply_to:
+            if fc.apply_to=="file":
+                fc.apply_to = IFileRequest
+            elif fc.apply_to=="proxy":
+                fc.apply_to = IProxyRequest
         # resolve callable if it is a string
         if fc.callable and isinstance(fc.callable, basestring):
             base = caller_package()
@@ -160,8 +160,8 @@ def lookupFilter(hook, response, request, url):
         if ff.hook != hook:
             continue
         # match response type
-        if ff.applyTo:
-            if not ff.applyTo.providedBy(response):
+        if ff.apply_to:
+            if not ff.apply_to.providedBy(response):
                 continue
         # match path
         if ff.path:
@@ -232,7 +232,7 @@ def parseJsonString(jsonstr, exitOnTestFailure=True):
         else:
             ok.append(tf)
             log.info("Loaded %s filter %s (%s) for %s"%(tf.hook, str(tf), repr(tf.callable),
-                                                              tf.applyTo or ""))
+                                                              tf.apply_to or ""))
     if exitOnTestFailure and err:
         raise ConfigurationError("Invalid filter configurations found. See error log for details.")
     return ok

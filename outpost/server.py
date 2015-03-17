@@ -66,7 +66,12 @@ def main(global_config, **settings):
             
         log.info("Serving files from directory: " + directory)
         log.info("Serving files with path prefix: " + fileroute)
-    
+
+    # normalize default path
+    path = settings.get("server.default_path", "")
+    if path and not path.startswith("/"):
+        settings["server.default_path"] = "/"+path
+
     # set up proxy routing
     host = settings.get("proxy.host")
     # bw 0.2.6 renamed ini file setting

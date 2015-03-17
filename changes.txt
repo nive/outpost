@@ -1,3 +1,8 @@
+0.3.1 Mar 2015
+--------------
+- renamed configuration applTo to apply_to
+- renamed configuration files.defaultfile to server.default_path
+
 0.3.0 - Feb 2015
 ----------------
 Production ready application level proxy

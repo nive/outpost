@@ -3,6 +3,7 @@
 #
 import json
 import os
+import time
 import gzip
 
 from StringIO import StringIO
@@ -34,7 +35,7 @@ def template(response, request, settings, url):
 
         filter = [
           {"callable": "outpost.filterinc.template",
-           "applyTo": "proxy",
+           "apply_to": "proxy",
            "content_type": "text/html",
            "path": "\.html",
            "settings": {"template": "../templates/main.pt"},
@@ -81,7 +82,7 @@ def replacestr(response, request, settings, url):
 
         filter = [
           {"callable": "outpost.filterinc.replacestr",
-           "applyTo": "file",
+           "apply_to": "file",
            "path": "\.html",
            "settings": {"str": "http://127.0.0.1/assets/", "new": "http://cdn.someserver.com/"},
            "name": "String replacer example"}
@@ -108,7 +109,7 @@ def rewrite_urls(response, request, settings, url):
 
         filter = [
           {"callable": "outpost.filterinc.rewrite_urls",
-           "applyTo": "proxy",
+           "apply_to": "proxy",
            "path": "\.html",
            "settings": {},
            "name": "rewrite_urls"}
@@ -132,7 +133,7 @@ def compress(response, request, settings, url):
 
         filter = [
           {"callable": "outpost.filterinc.compress",
-           "applyTo": "proxy",
+           "apply_to": "proxy",
            "content_type": "text/",
            "settings": {},
            "name": "compress"}
@@ -167,7 +168,7 @@ def cache_write(response, request, settings, url):
         filter = [
           {"callable": "outpost.filterinc.cache_write",
            "hook": "post",
-           "applyTo": "proxy",
+           "apply_to": "proxy",
            "content_type": "text/",
            "settings": {},
            "name": "cache-write"}
@@ -190,7 +191,7 @@ def cache_read(response, request, settings, url):
         filter = [
           {"callable": "outpost.filterinc.cache_read",
            "hook": "pre",
-           "applyTo": "proxy",
+           "apply_to": "proxy",
            "content_type": "text/",
            "settings": {},
            "name": "cache-read"}

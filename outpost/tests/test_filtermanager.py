@@ -47,7 +47,7 @@ class FilterConfTest(unittest.TestCase):
     def test_dict(self):
         values = dict(
             callable = "outpost.filterinc.replacestr",
-            applyTo = "",
+            apply_to = "",
             content_type = "",
             path = "",
             settings = {},
@@ -55,87 +55,87 @@ class FilterConfTest(unittest.TestCase):
         )
         c = filtermanager.FilterConf.fromDict(values)
         self.assert_(c.name is "Filter example")
-        self.assertFalse(c.applyTo)
+        self.assertFalse(c.apply_to)
         self.assert_(str(c) is "Filter example")
 
     def test_dict_callable1(self):
         values = dict(
             callable = "outpost.filterinc.replacestr",
-            applyTo = "file",
+            apply_to = "file",
             content_type = "text/html",
             settings = {"insert text": "Filtered!"},
             name = "Filter example"
         )
         c = filtermanager.FilterConf.fromDict(values)
         self.assert_(c.name is "Filter example")
-        self.assert_(filtermanager.IFileRequest == c.applyTo)
+        self.assert_(filtermanager.IFileRequest == c.apply_to)
 
     def test_dict_callable2(self):
         values = dict(
             callable = lambda a,b,c: a,
-            applyTo = "file",
+            apply_to = "file",
             content_type = "text/html",
             settings = {"insert text": "Filtered!"},
             name = "Filter example"
         )
         c = filtermanager.FilterConf.fromDict(values)
         self.assert_(c.name is "Filter example")
-        self.assert_(filtermanager.IFileRequest == c.applyTo)
+        self.assert_(filtermanager.IFileRequest == c.apply_to)
 
     def test_dict_callable3(self):
         def runfilter(a,b,c,d):
             return a
         values = dict(
             callable = runfilter,
-            applyTo = "file",
+            apply_to = "file",
             content_type = "text/html",
             settings = {"insert text": "Filtered!"},
             name = "Filter example"
         )
         c = filtermanager.FilterConf.fromDict(values)
         self.assert_(c.name is "Filter example")
-        self.assert_(filtermanager.IFileRequest == c.applyTo)
+        self.assert_(filtermanager.IFileRequest == c.apply_to)
 
     def test_dict_apply1(self):
         values = dict(
             callable =  "outpost.filterinc.replacestr",
-            applyTo = "file",
+            apply_to = "file",
             content_type = "text/html",
             settings = {"insert text": "Filtered!"},
             name = "Filter example"
         )
         c = filtermanager.FilterConf.fromDict(values)
         self.assert_(c.name is "Filter example")
-        self.assert_(filtermanager.IFileRequest == c.applyTo)
+        self.assert_(filtermanager.IFileRequest == c.apply_to)
 
     def test_dict_apply2(self):
         values = dict(
             callable =  "outpost.filterinc.replacestr",
-            applyTo = "proxy",
+            apply_to = "proxy",
             content_type = "text/html",
             settings = {"insert text": "Filtered!"},
             name = "Filter example"
         )
         c = filtermanager.FilterConf.fromDict(values)
         self.assert_(c.name is "Filter example")
-        self.assert_(filtermanager.IProxyRequest == c.applyTo)
+        self.assert_(filtermanager.IProxyRequest == c.apply_to)
 
     def test_dict_apply3(self):
         values = dict(
             callable =  "outpost.filterinc.replacestr",
-            applyTo = "",
+            apply_to = "",
             content_type = "text/html",
             settings = {"insert text": "Filtered!"},
             name = "Filter example"
         )
         c = filtermanager.FilterConf.fromDict(values)
         self.assert_(c.name is "Filter example")
-        self.assertFalse(c.applyTo)
+        self.assertFalse(c.apply_to)
 
     def test_test1(self):
         values = dict(
             callable =  "outpost.filterinc.replacestr",
-            applyTo = "",
+            apply_to = "",
             content_type = "text/html",
             settings = {"insert text": "Filtered!"},
             name = "Filter example"
@@ -146,7 +146,7 @@ class FilterConfTest(unittest.TestCase):
     def test_test2(self):
         values = dict(
             callable =  "outpost",
-            applyTo = "",
+            apply_to = "",
             content_type = "text/html",
             settings = {"insert text": "Filtered!"},
             name = "Filter example"
@@ -157,14 +157,13 @@ class FilterConfTest(unittest.TestCase):
     def test_test3(self):
         values = dict(
             callable =  "outpost",
-            applyTo = "",
+            apply_to = "",
             content_type = 123,
             path = 456,
             settings = {"insert text": "Filtered!"},
             name = "Filter example"
         )
-        c = filtermanager.FilterConf.fromDict(values)
-        self.assert_(len(c.test())==3)
+        self.assertRaises(TypeError, filtermanager.FilterConf.fromDict, values)
 
 
 class JsonTest(unittest.TestCase):
@@ -181,7 +180,7 @@ class JsonTest(unittest.TestCase):
     def test_single(self):
         jsonstr = """{
            "callable": "outpost.filterinc.replacestr",
-           "applyTo": "file",
+           "apply_to": "file",
            "path": ".html",
            "settings": {"str": "http://127.0.0.1/assets/", "new": "http://cdn.someserver.com/"},
            "name": "String replacer example"}"""
@@ -192,13 +191,13 @@ class JsonTest(unittest.TestCase):
     def test_multiple(self):
         jsonstr = """[{
            "callable": "outpost.filterinc.replacestr",
-           "applyTo": "file",
+           "apply_to": "file",
            "path": ".html",
            "settings": {"str": "http://127.0.0.1/assets/", "new": "http://cdn.someserver.com/"},
            "name": "String replacer example"},
            {
            "callable": "outpost.filterinc.replacestr",
-           "applyTo": "file",
+           "apply_to": "file",
            "path": ".html",
            "settings": {"str": "http://127.0.0.1/assets/", "new": "http://cdn.someserver.com/"},
            "name": "2. String replacer example"}]"""
@@ -210,7 +209,7 @@ class JsonTest(unittest.TestCase):
     def test_failure(self):
         jsonstr = """{
            "callable": "",
-           "applyTo": "file",
+           "apply_to": "file",
            "path": ".html",
            "settings": {"str": "http://127.0.0.1/assets/", "new": "http://cdn.someserver.com/"},
            "name": "String replacer example"}"""
@@ -220,7 +219,7 @@ class JsonTest(unittest.TestCase):
     def test_failure2(self):
         jsonstr = """{
            "callable": "",
-           "applyTo": "file",
+           "apply_to": "file",
            "path": ".html",
            "settings": {"str": "http://127.0.0.1/assets/", "new": "http://cdn.someserver.com/"},
            "name": "String replacer example"}"""
@@ -231,7 +230,7 @@ class RunTest(unittest.TestCase):
 
     filter1 = dict(
         callable =  "outpost.filterinc.replacestr",
-        applyTo = None,
+        apply_to = None,
         path = None,
         content_type = None,
         settings = {"str": "<body>", "new": "<body>Updated!"},
@@ -259,7 +258,7 @@ class RunTest(unittest.TestCase):
     def test_lookup_file(self):
         filter_file = dict(
             callable =  "outpost.filterinc.replacestr",
-            applyTo = "file",
+            apply_to = "file",
             path = None,
             content_type = None,
             settings = {"str": "<body>", "new": "<body>Updated!"},
@@ -276,7 +275,7 @@ class RunTest(unittest.TestCase):
     def test_lookup_proxy(self):
         filter_proxy = dict(
             callable =  "outpost.filterinc.replacestr",
-            applyTo = "proxy",
+            apply_to = "proxy",
             path = None,
             content_type = None,
             settings = {"str": "<body>", "new": "<body>Updated!"},
@@ -293,7 +292,7 @@ class RunTest(unittest.TestCase):
     def test_lookup_path(self):
         filter_path = dict(
             callable =  "outpost.filterinc.replacestr",
-            applyTo = None,
+            apply_to = None,
             path = "index\.html",
             content_type = None,
             settings = {"str": "<body>", "new": "<body>Updated!"},
@@ -314,7 +313,7 @@ class RunTest(unittest.TestCase):
     def test_lookup_ct(self):
         filter_ct = dict(
             callable =  "outpost.filterinc.replacestr",
-            applyTo = None,
+            apply_to = None,
             path = None,
             content_type = "text/html",
             settings = {"str": "<body>", "new": "<body>Updated!"},
@@ -336,7 +335,7 @@ class RunTest(unittest.TestCase):
     def test_lookup_all(self):
         filter_all = dict(
             callable =  "outpost.filterinc.replacestr",
-            applyTo = "file",
+            apply_to = "file",
             path = "index\.html",
             content_type = "text/*",
             settings = {"str": "<body>", "new": "<body>Updated!"},

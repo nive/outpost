@@ -38,8 +38,7 @@ class FileServer(object):
         if proxy_response:
             return proxy_response
 
-
-        df = settings.get("files.defaultfile")
+        df = settings.get("server.default_path")
         # bw 0.2.6
         if df is None:
             df = settings.get("server.defaultfile")

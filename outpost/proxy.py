@@ -38,6 +38,11 @@ class Proxy(object):
     def response(self):
         log = logging.getLogger("proxy")
         request = self.request
+        settings = request.registry.settings
+
+        path = settings.get("server.default_path")
+        if path and self.url.path=="/":
+            self.url.path = path
 
         # run pre proxy request hooked filters
         # if the filter returns a response and not None. The response is returned
@@ -46,7 +51,6 @@ class Proxy(object):
         if proxy_response:
             return proxy_response
 
-        settings = request.registry.settings
         params = dict(request.params)
         url = self.url.destUrl
 
