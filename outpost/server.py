@@ -93,15 +93,28 @@ def main(global_config, **settings):
     # setup pyramid configuration and routes
     config = Configurator(settings = settings)
 
-    if proxyroute:
+    # route proxy requests
+    def regproxy(route):
         # handle all /proxy/... urls by the proxy server
-        config.add_route("proxy", proxyroute+"*subpath")
+        config.add_route("proxy", route+"*subpath")
         config.add_view(callProxy, route_name="proxy")
 
-    # map the directory and disable caching
-    if directory:
-        config.add_route("files", fileroute+"*subpath")
+    # route the local directory
+    def regfile(route):
+        config.add_route("files", route+"*subpath")
         config.add_view(serveFile, route_name="files")
+
+    # swap order of route registration to handle fallbacks
+    fallback = settings.get("server.fallback")
+
+    if proxyroute and fallback!="proxy":
+        regproxy(proxyroute)
+
+    if directory:
+        regfile(fileroute)
+
+    if proxyroute and fallback=="proxy":
+        regproxy(proxyroute)
 
     config.commit()
 

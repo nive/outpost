@@ -24,6 +24,7 @@ proxy.route = {{proxy}}
 
 server.default_path = index.html
 server.content_type = text/html; charset=UTF-8
+server.fallback = files
 
 #################################################################################
 # Filter and templating
