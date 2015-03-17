@@ -3,7 +3,6 @@
 #
 import logging
 import os
-import json
 
 from pyramid.config import Configurator
 
@@ -24,16 +23,22 @@ def callProxy(request):
     proxy = Proxy(url, request, debug=settings.get("debug"))
     return proxy.response()
 
+
 def serveFile(context, request):
     settings = request.registry.settings
     server = FileServer(request.matchdict["subpath"], context, request, debug=settings.get("debug"))
     return server.response()
 
 
-# Main server function
+def setup(global_config, **settings):
+    """
+    Parse ini file settings, setup defaults and register views
 
-def main(global_config, **settings):
-    log = logging.getLogger()
+    :param global_config:
+    :param settings:
+    :return: returns pyramid configurator
+    """
+    log = logging.getLogger("outpost")
 
     fileroute=proxyroute = None
     debug = settings.get("debug")
@@ -57,13 +62,13 @@ def main(global_config, **settings):
         elif directory.find(":") == -1 and not directory.startswith(os.sep):
             directory = wd + directory
         settings["files.directory"] = directory
-        
+
         fileroute = settings.get("files.route", "")
         if not fileroute.startswith("/"):
             fileroute = "/"+fileroute
         if not fileroute.endswith("/"):
             fileroute += "/"
-            
+
         log.info("Serving files from directory: " + directory)
         log.info("Serving files with path prefix: " + fileroute)
 
@@ -89,7 +94,7 @@ def main(global_config, **settings):
 
     if directory and fileroute==proxyroute:
         raise filtermanager.ConfigurationError("File and proxy routing is equal.")
-    
+
     # setup pyramid configuration and routes
     config = Configurator(settings = settings)
 
@@ -121,6 +126,15 @@ def main(global_config, **settings):
     logger = logging.getLogger("requests.packages.urllib3.connectionpool")
     logger.level = "error"
 
+    return config
+
+
+
+
+# Main server function
+def main(global_config, **settings):
+    # setup outpost
+    config = setup(global_config, **settings)
     # creates the static server
     return config.make_wsgi_app()
 
