@@ -85,6 +85,9 @@ class FilterConf(object):
                 fc.apply_to = IFileRequest
             elif fc.apply_to=="proxy":
                 fc.apply_to = IProxyRequest
+            else:
+                # invalid value -> remove
+                fc.apply_to = None
         # resolve callable if it is a string
         if fc.callable and isinstance(fc.callable, basestring):
             base = caller_package()
@@ -122,8 +125,10 @@ def runPreHook(response, request, url):
     :param url:
     :return: response
     """
+    log = logging.getLogger("outpost.filter")
     matched = lookupFilter("pre", response, request, url)
     for ff in matched:
+        log.debug("run pre %s: %s" % (ff.name or str(ff.callable), str(url)))
         response = applyFilter(ff, response, request, url)
     return response
 
@@ -137,8 +142,10 @@ def runPostHook(response, request, url):
     :param url:
     :return: response
     """
+    log = logging.getLogger("outpost.filter")
     matched = lookupFilter("post", response, request, url)
     for ff in matched:
+        log.debug("run post %s: %s" % (ff.name or str(ff.callable), str(url)))
         response = applyFilter(ff, response, request, url)
     return response
 
@@ -186,8 +193,6 @@ def applyFilter(filter, response, request, url):
     :return: response
     """
     # load filter.
-    log = logging.getLogger("filter")
-    log.debug("%s => %s" % (str(url), filter.name))
     response = filter.callable(response, request, filter.settings, url)
     return response
 
@@ -202,7 +207,7 @@ def parseJsonString(jsonstr, exitOnTestFailure=True):
     :param exitOnTestFailure:
     :return: list of parsed filter
     """
-    log = logging.getLogger("filter")
+    log = logging.getLogger("outpost")
     if jsonstr is None:
         return ()
     jsonstr = jsonstr.strip()

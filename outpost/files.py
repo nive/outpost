@@ -27,7 +27,7 @@ class FileServer(object):
         self.debug = debug
         
     def response(self):
-        log = logging.getLogger("files")
+        log = logging.getLogger("outpost.files")
         settings = self.request.registry.settings
         url = self.request.url
 

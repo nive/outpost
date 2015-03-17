@@ -36,7 +36,7 @@ class Proxy(object):
         self.debug = debug
 
     def response(self):
-        log = logging.getLogger("proxy")
+        log = logging.getLogger("outpost.proxy")
         request = self.request
         settings = request.registry.settings
 
@@ -96,11 +96,11 @@ class Proxy(object):
         # status codes 200 - 299 are considered as success
         if 200 <= response.status_code < 300:
             size = response.raw.tell()
-            log.debug("%s => %s: %s, %d bytes in %d ms" % (self.url.destUrl, method, response.status_code, size,
-                                                           response.elapsed.microseconds/1000))
+            log.debug("%s %s, %d bytes in %d ms %s" % (method, response.status_code, size,
+                                                       response.elapsed.microseconds/1000, self.url.destUrl))
         else:
-            log.debug("%s => %s: %s %s, in %d ms" % (self.url.destUrl, method, response.status_code, response.reason,
-                                                     response.elapsed.microseconds/1000))
+            log.debug("%s: %s %s, in %d ms %s" % (method, response.status_code, response.reason,
+                                                  response.elapsed.microseconds/1000, self.url.destUrl))
 
         headers = dict(response.headers)
         if 'content-length' in headers:
