@@ -157,6 +157,33 @@ def compress(response, request, settings, url):
     return response
 
 
+def addHeader(response, request, settings, url):
+    """
+    Add a http header
+    ----------------------
+    Compress the resposne with gzip on the fly.
+
+    Example ini file section ::
+
+        filter = [
+          {"callable": "outpost.filterinc.addHeader",
+           "apply_to": "proxy",
+           "content_type": "text/html",
+           "settings": {"name": "Cache-Control", "value": "no-cache"},
+           "name": "add header"}
+          ]
+
+    """
+    name = str(settings.get("name"))
+    value = str(settings.get("value"))
+    if name:
+        if name in response.headers:
+            del response.headers[name]
+
+        response.headers[name] = value
+    return response
+
+
 __file_cache__ = {}
 
 def cache_write(response, request, settings, url):
