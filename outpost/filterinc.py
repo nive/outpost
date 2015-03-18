@@ -9,6 +9,7 @@ from StringIO import StringIO
 from pyramid.renderers import render
 from pyramid.response import Response
 
+from outpost import filtermanager
 
 def template(response, request, settings, url):
     """
@@ -204,6 +205,10 @@ def cache_write(response, request, settings, url):
           ]
 
     """
+    # do not cache responses loaded from cache
+    if request.environ.get('cache-hit'):
+        return response
+
     global __file_cache__
     # todo handle request type if response is none
     __file_cache__[str(url)] = (response.body, response.status_code, response.headers)
@@ -215,6 +220,8 @@ def cache_read(response, request, settings, url):
     -----------------------
     A simple ignorant python module level memory cache.
 
+    Set `abort=true` to finish proxy response if found in cache.
+
     Example ini file section ::
 
         filter = [
@@ -222,7 +229,7 @@ def cache_read(response, request, settings, url):
            "hook": "pre",
            "apply_to": "proxy",
            "content_type": "text/",
-           "settings": {},
+           "settings": {"abort": false},
            "name": "cache-read"}
           ]
 
@@ -233,8 +240,11 @@ def cache_read(response, request, settings, url):
     body, status_code, headers = __file_cache__[str(url)]
     response = Response(body=body, status=status_code)
     response.headers.update(headers)
+    request.environ['cache-hit'] = True
     # todo handle request type if cached
     #alsoProvides(response, filtermanager.IProxyRequest)
+    if settings.get("abort")==True:
+        raise filtermanager.ResponseFinished(response=response)
     return response
 
 

@@ -47,60 +47,69 @@ class Proxy(object):
         # run pre proxy request hooked filters
         # if the filter returns a response and not None. The response is returned
         # immediately
-        proxy_response = filtermanager.runPreHook(None, request, self.url)
-        if proxy_response:
-            return proxy_response
+        try:
+            response = filtermanager.runPreHook(None, request, self.url)
+        except filtermanager.ResponseFinished, e:
+            return e.response
 
-        params = dict(request.params)
-        url = self.url.destUrl
+        if response is None:
+            url = self.url.destUrl
 
-        # prepare headers
-        headers = {}
-        for h,v in request.headers.environ.items():
-            h = h.lower()
-            if h.startswith("server_") or h.startswith("wsgi") or h.startswith("bfg") or h.startswith("webob"):
-                continue
-            if h.startswith("http_"):
-                headers[h[5:]] = v
-            elif h.find("_")!=-1:
-                headers[h.replace("_", "-")] = v
+            # prepare headers
+            headers = {}
+            for h,v in request.headers.environ.items():
+                h = h.lower()
+                if h.startswith("server_") or h.startswith("wsgi") or h.startswith("bfg") or h.startswith("webob"):
+                    continue
+                if h.startswith("http_"):
+                    headers[h[5:]] = v
+                elif h.find("_")!=-1:
+                    headers[h.replace("_", "-")] = v
+                else:
+                    headers[h] = v
+
+            headers["host"] = self.url.host
+            headers["info"] = self.url.path
+            if "content-length" in headers:
+                del headers["content-length"]
+
+            params = dict(request.params)
+            parameter = {"headers": headers, "cookies": request.cookies}
+            if request.method.lower() == "get":
+                parameter["params"] = params
             else:
-                headers[h] = v
-        
-        headers["host"] = self.url.host
-        headers["info"] = self.url.path
-        if "content-length" in headers:
-            del headers["content-length"]
+                parameter["data"] = request.body
 
-        parameter = {"headers": headers, "cookies": request.cookies}
-        if request.method.lower() == "get":
-            parameter["params"] = params
-        else:
-            parameter["data"] = request.body
+            # handle session if activated
+            if self.usesession:
+                global __session_cache__
+                if not __session_cache__:
+                    __session_cache__ = requests.Session()
+                session = __session_cache__
+            else:
+                session = requests
 
-        # handle session if activated
-        if self.usesession:
-            global __session_cache__
-            if not __session_cache__:
-                __session_cache__ = requests.Session()
-            session = __session_cache__
-        else:
-            session = requests
+            # trace in debugger
+            method = request.method
+            if self.debug and settings.get("proxy.trace") and re.search(settings["proxy.trace"], url):
+                pdb.set_trace()
+            response = session.request(method, url, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response. (c) to continue. (Python debugger)
+            body = response.content
+            # status codes 200 - 299 are considered as success
+            if 200 <= response.status_code < 300:
+                size = response.raw.tell()
+                log.debug("%s %s, %d bytes in %d ms %s" % (method, response.status_code, size,
+                                                           response.elapsed.microseconds/1000, self.url.destUrl))
+            else:
+                log.debug("%s: %s %s, in %d ms %s" % (method, response.status_code, response.reason,
+                                                      response.elapsed.microseconds/1000, self.url.destUrl))
 
-        # trace in debugger
-        method = request.method
-        if self.debug and settings.get("proxy.trace") and re.search(settings["proxy.trace"], url):
-            pdb.set_trace()
-        response = session.request(method, url, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response. (c) to continue. (Python debugger)
-        body = response.content
-        # status codes 200 - 299 are considered as success
-        if 200 <= response.status_code < 300:
-            size = response.raw.tell()
-            log.debug("%s %s, %d bytes in %d ms %s" % (method, response.status_code, size,
-                                                       response.elapsed.microseconds/1000, self.url.destUrl))
+
         else:
-            log.debug("%s: %s %s, in %d ms %s" % (method, response.status_code, response.reason,
-                                                  response.elapsed.microseconds/1000, self.url.destUrl))
+            # pre hook returned response
+            method = "CACHE"
+            body = response.body
+            log.debug("%s: %s" % (method, self.url.destUrl))
 
         headers = dict(response.headers)
         if 'content-length' in headers:

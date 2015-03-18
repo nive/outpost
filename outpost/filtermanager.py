@@ -126,6 +126,7 @@ def runPreHook(response, request, url):
     :return: response
     """
     log = logging.getLogger("outpost.filter")
+    # to
     matched = lookupFilter("pre", response, request, url)
     for ff in matched:
         log.debug("run pre %s: %s" % (ff.name or str(ff.callable), str(url)))
@@ -241,6 +242,13 @@ def parseJsonString(jsonstr, exitOnTestFailure=True):
     if exitOnTestFailure and err:
         raise ConfigurationError("Invalid filter configurations found. See error log for details.")
     return ok
+
+
+class ResponseFinished(Exception):
+    """
+    """
+    def __init__(self, response):
+        self.response = response
 
 
 class ConfigurationError(Exception):
