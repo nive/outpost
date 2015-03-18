@@ -172,7 +172,7 @@ def lookupFilter(hook, response, request, url):
                 continue
         # match path
         if ff.path:
-            if not ff.path.search(request.url):
+            if not ff.path.search(str(url)):
                 continue
         # match content type
         if ff.content_type:
