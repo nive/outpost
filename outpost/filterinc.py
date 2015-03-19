@@ -158,7 +158,7 @@ def compress(response, request, settings, url):
     return response
 
 
-def addHeader(response, request, settings, url):
+def add_header(response, request, settings, url):
     """
     Add a http header
     ----------------------
@@ -167,7 +167,7 @@ def addHeader(response, request, settings, url):
     Example ini file section ::
 
         filter = [
-          {"callable": "outpost.filterinc.addHeader",
+          {"callable": "outpost.filterinc.add_header",
            "apply_to": "proxy",
            "content_type": "text/html",
            "settings": {"name": "Cache-Control", "value": "no-cache"},
@@ -206,12 +206,15 @@ def cache_write(response, request, settings, url):
 
     """
     # do not cache responses loaded from cache
-    if request.environ.get('cache-hit'):
+    if request.environ.get("cache-hit"):
+        return response
+    if response.status_int!=200 or request.method=="post":
         return response
 
     global __file_cache__
     # todo handle request type if response is none
-    __file_cache__[str(url)] = (response.body, response.status_code, response.headers)
+    path = url.fullPath
+    __file_cache__[path] = (response.body, response.status_code, response.headers)
     return response
 
 def cache_read(response, request, settings, url):
@@ -235,15 +238,16 @@ def cache_read(response, request, settings, url):
 
     """
     global __file_cache__
-    if not str(url) in __file_cache__:
+    path = url.fullPath
+    if not path in __file_cache__:
         return None
-    body, status_code, headers = __file_cache__[str(url)]
+    body, status_code, headers = __file_cache__[path]
     response = Response(body=body, status=status_code)
     response.headers.update(headers)
     request.environ['cache-hit'] = True
     # todo handle request type if cached
     #alsoProvides(response, filtermanager.IProxyRequest)
-    if settings.get("abort")==True:
+    if settings.get("abort")!=False:
         raise filtermanager.ResponseFinished(response=response)
     return response
 

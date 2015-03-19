@@ -39,10 +39,13 @@ class FilterConf(object):
     callable: points to the callable of the filter. A function, dotted path spec or class.
     hook: hook the filter before (pre) or after (post) triggering the proxy or file server.
     apply_to: defines the reponse type to apply the filter to: `file`, `proxy`. `None` for both.
-    mime: applies the filter only if the mime type of the response matches
+    content_type: applies the filter only if the mime type of the response matches
     path: applies the filter only if the pyth of the request matches
+    environ: match a request.environ field
+    sub_filter: name of filter. trigger the named filter filter only if this filter has been executed
+    is_sub_filter: True/False. if True run only if a preious filter has set this filters' name as sub_filter
     settings: individual filter settings
-    name: readable name, just used in logging
+    name: name, used to reference sub filter and in logging
 
     Example ::
 
@@ -57,6 +60,9 @@ class FilterConf(object):
         htmlfilter = FilterConf(
             callable = runfilter,
             apply_to = "proxy",
+            environ = {"name": page, "value": True},
+            sub_filter = "maintmpl"
+            is_sub = False
             content_type = "text/html",
             settings = {"insert text": "Filtered!"},
             name = "HTML filter example"
@@ -67,6 +73,9 @@ class FilterConf(object):
     callable=None
     hook="post"
     content_type=None
+    environ=None
+    sub_filter=None
+    is_sub_filter=False
     path=None
     apply_to=None
     settings=None
@@ -111,8 +120,11 @@ class FilterConf(object):
         result = []
         if not callable(self.callable):
             result.append("Filter callable is *not* a callable! %s"% (repr(self.callable)))
-        if not self.hook in ("post","pre"):
-            result.append("hook must be set to 'post' or 'pre'! %s"% (str(self.hook)))
+        if not self.hook in ("post","pre","all",""):
+            result.append("hook must be set to 'all', 'post', 'pre'! %s"% (str(self.hook)))
+        if self.environ:
+            if not "name" in self.environ and not "value" in self.environ:
+                result.append("environ must have 'name' and 'value' keys! %s"% (str(self.environ)))
         return result
 
 
@@ -126,10 +138,8 @@ def runPreHook(response, request, url):
     :return: response
     """
     log = logging.getLogger("outpost.filter")
-    # to
-    matched = lookupFilter("pre", response, request, url)
-    for ff in matched:
-        log.debug("run pre %s: %s" % (ff.name or str(ff.callable), str(url)))
+    for ff in lookupFilter("pre", response, request, url):
+        log.debug("pre %s: %s" % (ff.name or str(ff.callable), str(url)))
         response = applyFilter(ff, response, request, url)
     return response
 
@@ -144,9 +154,8 @@ def runPostHook(response, request, url):
     :return: response
     """
     log = logging.getLogger("outpost.filter")
-    matched = lookupFilter("post", response, request, url)
-    for ff in matched:
-        log.debug("run post %s: %s" % (ff.name or str(ff.callable), str(url)))
+    for ff in lookupFilter("post", response, request, url):
+        log.debug("post %s: %s" % (ff.name or str(ff.callable), str(url)))
         response = applyFilter(ff, response, request, url)
     return response
 
@@ -162,15 +171,24 @@ def lookupFilter(hook, response, request, url):
     :return: list of filters
     """
     all = request.registry.settings["filter"]
-    matched = []
+    #matched = []
     for ff in all:
-        # match response type
+        # match sub filter
+        if ff.is_sub_filter:
+            if ff.name in request.environ.get("outpost.sub_filter", ()):
+                #matched.append(ff)
+                yield ff
+            continue
+        # match pre/post hook
         if ff.hook != hook:
             continue
         # match response type
         if ff.apply_to:
             if not ff.apply_to.providedBy(response):
                 continue
+        # match environ
+        if ff.environ is not None and ff.environ.value != request.environ.get(ff.environ.name):
+            continue
         # match path
         if ff.path:
             if not ff.path.search(str(url)):
@@ -179,22 +197,25 @@ def lookupFilter(hook, response, request, url):
         if ff.content_type:
             if not ff.content_type.search(response.content_type):
                 continue
-        matched.append(ff)
-    return matched
+        yield ff
+    #return matched
 
 
-def applyFilter(filter, response, request, url):
+def applyFilter(filterconf, response, request, url):
     """
     Applies a single filter returned by `lookupFilter`
 
-    :param filter:
+    :param filterconf:
     :param request:
     :param response:
     :param url:
     :return: response
     """
     # load filter.
-    response = filter.callable(response, request, filter.settings, url)
+    response = filterconf.callable(response, request, filterconf.settings, url)
+    _trackFilter(filterconf, request)
+    # activate subfilter
+    _activateSubFilter(filterconf, request)
     return response
 
 
@@ -238,10 +259,25 @@ def parseJsonString(jsonstr, exitOnTestFailure=True):
         else:
             ok.append(tf)
             log.info("Loaded %s filter %s (%s) for %s"%(tf.hook, str(tf), repr(tf.callable),
-                                                              tf.apply_to or ""))
+                                                              tf.apply_to or "all requests"))
     if exitOnTestFailure and err:
         raise ConfigurationError("Invalid filter configurations found. See error log for details.")
     return ok
+
+
+def _trackFilter(ff, request):
+    if not "outpost.filter" in request.environ:
+        request.environ["outpost.filter"] = [ff.name or str(ff.callable)]
+    elif not ff.sub_filter in request.environ["outpost.filter"]:
+        request.environ["outpost.filter"].append(ff.name or str(ff.callable))
+
+def _activateSubFilter(ff, request):
+    if ff.sub_filter:
+        if not "outpost.sub_filter" in request.environ:
+            request.environ["outpost.sub_filter"] = [ff.sub_filter]
+        elif not ff.sub_filter in request.environ["outpost.sub_filter"]:
+            request.environ["outpost.sub_filter"].append(ff.sub_filter)
+
 
 
 class ResponseFinished(Exception):
