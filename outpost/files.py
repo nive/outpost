@@ -7,13 +7,21 @@ import re
 from mimetypes import guess_type
 
 from pyramid.static import static_view
-from pyramid.httpexceptions import HTTPNotFound
 
 from zope.interface import alsoProvides
 
 from outpost import filtermanager
 
 __ct_cache__ = {}
+
+
+# delegate views to the file server
+def serveFile(context, request):
+    settings = request.registry.settings
+    url = FileUrlHandler(request, settings)
+    server = FileServer(url, context, request, debug=settings.get("debug"))
+    return server.response()
+
 
 class FileServer(object):
     """
@@ -91,5 +99,59 @@ class FileServer(object):
         return file
         
 
+
+
+class FileUrlHandler(object):
+    """
+    Handles local urls
+
+    Attributes:
+    - protocol: http or https
+    - host: without protocol, including port
+    - path: path without protocol and domain
+    - destUrl: valid proxy destination url
+    - destDomain: valid proxy destination domain
+    - srcUrl: embedded proxy url
+    - srcDomain: embedded proxy domain
+
+    Methods:
+    - rewriteUrls()
+
+    """
+    def __init__(self, request, settings):
+        self.host = "local"
+        self.protocol = "file"
+        self.path = "/".join(request.matchdict["subpath"])
+        self.qs = request.query_string
+        if not self.path.startswith("/"):
+            self.path = "/"+self.path
+
+    def __str__(self):
+        return self.destUrl
+
+    @property
+    def fullPath(self):
+        if self.qs:
+            return "//%s/%s%s?%s" % (self.protocol, self.host, self.path, self.qs)
+        return "//%s/%s%s" % (self.protocol, self.host, self.path)
+
+    @property
+    def destUrl(self):
+        return "//file/%s/%s%s" % (self.protocol, self.host, self.path)
+
+    @property
+    def srcUrl(self):
+        return self.path
+
+    @property
+    def destDomain(self):
+        return "//%s/%s" % (self.protocol, self.host)
+
+    @property
+    def srcDomain(self):
+        return ""
+
+    def rewriteUrls(self, body):
+        return body
 
 

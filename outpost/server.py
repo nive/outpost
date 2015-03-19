@@ -6,28 +6,9 @@ import os
 
 from pyramid.config import Configurator
 
-from outpost.proxy import Proxy, ProxyUrlHandler, VirtualPathProxyUrlHandler
-from outpost.files import FileServer
 from outpost import filtermanager
-
-# delegate views to the file server and proxy server
- 
-def callProxy(request):
-    settings = request.registry.settings
-    route = settings.get("proxy.route")
-    # todo pluggable url handlers
-    if route=="__proxy":
-        url = VirtualPathProxyUrlHandler(request, settings)
-    else:
-        url = ProxyUrlHandler(request, settings)
-    proxy = Proxy(url, request, debug=settings.get("debug"))
-    return proxy.response()
-
-
-def serveFile(context, request):
-    settings = request.registry.settings
-    server = FileServer(request.matchdict["subpath"], context, request, debug=settings.get("debug"))
-    return server.response()
+from outpost.proxy import callProxy
+from outpost.files import serveFile
 
 
 def setup(global_config, **settings):
@@ -69,8 +50,7 @@ def setup(global_config, **settings):
         if not fileroute.endswith("/"):
             fileroute += "/"
 
-        log.info("Serving files from directory: " + directory)
-        log.info("Serving files with path prefix: " + fileroute)
+        log.info("Serving files with path prefix '%s' from directory '%s'" % (fileroute, directory))
 
     # normalize default path
     path = settings.get("server.default_path", "")
@@ -90,7 +70,7 @@ def setup(global_config, **settings):
             proxyroute = "/"+proxyroute
         if not proxyroute.endswith("/"):
             proxyroute += "/"
-        log.info("Proxying requests with path prefix %s to '%s'", proxyroute, host)
+        log.info("Proxying requests with path prefix '%s' to '%s'", proxyroute, host)
 
     if directory and fileroute==proxyroute:
         raise filtermanager.ConfigurationError("File and proxy routing is equal.")
@@ -123,9 +103,6 @@ def setup(global_config, **settings):
 
     config.commit()
 
-    logger = logging.getLogger("requests.packages.urllib3.connectionpool")
-    logger.level = "error"
-
     return config
 
 
@@ -135,6 +112,8 @@ def setup(global_config, **settings):
 def main(global_config, **settings):
     # setup outpost
     config = setup(global_config, **settings)
+    logger = logging.getLogger("requests.packages.urllib3.connectionpool")
+    logger.level = "error"
     # creates the static server
     return config.make_wsgi_app()
 

@@ -7,13 +7,26 @@ import pdb
 import re
 
 from zope.interface import alsoProvides
-
 from pyramid.response import Response
 
 from outpost import filtermanager
 
-
 __session_cache__ = None
+
+
+# delegate views to the proxy server
+def callProxy(request):
+    settings = request.registry.settings
+    route = settings.get("proxy.route")
+    # todo pluggable url handlers
+    if route=="__proxy":
+        url = VirtualPathProxyUrlHandler(request, settings)
+    else:
+        url = ProxyUrlHandler(request, settings)
+    proxy = Proxy(url, request, debug=settings.get("debug"))
+    return proxy.response()
+
+
 
 class Proxy(object):
     """
@@ -59,7 +72,7 @@ class Proxy(object):
             headers = {}
             for h,v in request.headers.environ.items():
                 h = h.lower()
-                if h.startswith("server_") or h.startswith("wsgi") or h.startswith("bfg") or h.startswith("webob"):
+                if h.startswith(("server_", "wsgi", "bfg", "webob", "outpost")):
                     continue
                 if h.startswith("http_"):
                     headers[h[5:]] = v
@@ -174,13 +187,20 @@ class ProxyUrlHandler(object):
     def __init__(self, request, settings):
         self.host = settings.get("proxy.host")
         self.protocol = settings.get("proxy.protocol") or "http"
-        self.path = request.path_info     # urlparts is the source url in list form
+        self.path = request.path_info     # path without host and query string
+        self.qs = request.query_string
         if not self.path.startswith("/"):
             self.path = "/"+self.path
 
     def __str__(self):
         return self.destUrl
     
+    @property
+    def fullPath(self):
+        if self.qs:
+            return "%s://%s%s?%s" % (self.protocol, self.host, self.path, self.qs)
+        return "%s://%s%s" % (self.protocol, self.host, self.path)
+
     @property
     def destUrl(self):
         return "%s://%s%s" % (self.protocol, self.host, self.path)
@@ -235,6 +255,7 @@ class VirtualPathProxyUrlHandler(object):
         urlparts = request.matchdict["subpath"]     # urlparts is the source url in list form
         host = settings.get("proxy.host")
         placeholder = settings.get("proxy.domainplaceholder","__domain")
+        self.qs = request.query_string
         # bw 0.2.6
         if host is None:
             host = settings.get("proxy.domain")
@@ -254,6 +275,12 @@ class VirtualPathProxyUrlHandler(object):
 
     def __str__(self):
         return self.destUrl
+
+    @property
+    def fullPath(self):
+        if self.qs:
+            return "%s://%s%s?%s" % (self.protocol, self.host, self.path, self.qs)
+        return "%s://%s%s" % (self.protocol, self.host, self.path)
 
     @property
     def destUrl(self):
