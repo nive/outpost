@@ -53,15 +53,15 @@ class Proxy(object):
         request = self.request
         settings = request.registry.settings
 
-        path = settings.get("server.default_path")
-        if path and self.url.path=="/":
-            self.url.path = path
+        #path = settings.get("server.default_path")
+        #if path and self.url.path=="/":
+        #    self.url.path = path
 
         # run pre proxy request hooked filters
         # if the filter returns a response and not None. The response is returned
         # immediately
         try:
-            response = filtermanager.runPreHook(None, request, self.url)
+            response = filtermanager.runPreHook(filtermanager.EmptyProxyResponse(), request, self.url)
         except filtermanager.ResponseFinished, e:
             return e.response
 
@@ -87,7 +87,7 @@ class Proxy(object):
                 del headers["content-length"]
 
             params = dict(request.params)
-            parameter = {"headers": headers, "cookies": request.cookies}
+            parameter = {"headers": headers, "cookies": request.cookies, "timeout": float(settings.get("proxy.timeout"))}
             if request.method.lower() == "get":
                 parameter["params"] = params
             else:
@@ -106,23 +106,26 @@ class Proxy(object):
             method = request.method
             if self.debug and settings.get("proxy.trace") and re.search(settings["proxy.trace"], url):
                 pdb.set_trace()
-            response = session.request(method, url, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response. (c) to continue. (Python debugger)
-            body = response.content
-            # status codes 200 - 299 are considered as success
-            if 200 <= response.status_code < 300:
-                size = response.raw.tell()
-                log.debug("%s %s, %d bytes in %d ms %s" % (method, response.status_code, size,
-                                                           response.elapsed.microseconds/1000, self.url.destUrl))
-            else:
-                log.debug("%s: %s %s, in %d ms %s" % (method, response.status_code, response.reason,
-                                                      response.elapsed.microseconds/1000, self.url.destUrl))
-
+            try:
+                response = session.request(method, url, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response. (c) to continue. (Python debugger)
+                body = response.content
+                # status codes 200 - 299 are considered as success
+                if 200 <= response.status_code < 300:
+                    size = response.raw.tell()
+                    log.debug("%s %s, %d bytes in %d ms %s" % (method, response.status_code, size,
+                                                               response.elapsed.microseconds/1000, self.url.destUrl))
+                else:
+                    log.debug("%s: %s %s, in %d ms %s" % (method, response.status_code, response.reason,
+                                                          response.elapsed.microseconds/1000, self.url.destUrl))
+            except Exception, e:
+                #todo excp types
+                log.debug("%s %s" % (str(e), self.url.destUrl))
+                response = Response(body=str(e), status=500)
+                body = response.body
 
         else:
             # pre hook returned response
-            method = "CACHE"
             body = response.body
-            log.debug("%s: %s" % (method, self.url.destUrl))
 
         headers = dict(response.headers)
         if 'content-length' in headers:

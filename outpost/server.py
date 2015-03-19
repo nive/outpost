@@ -112,8 +112,8 @@ def setup(global_config, **settings):
 def main(global_config, **settings):
     # setup outpost
     config = setup(global_config, **settings)
-    logger = logging.getLogger("requests.packages.urllib3.connectionpool")
-    logger.level = "error"
+    #logger = logging.getLogger("requests.packages.urllib3.connectionpool")
+    #logger.level = "error"
     # creates the static server
     return config.make_wsgi_app()
 

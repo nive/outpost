@@ -3,15 +3,17 @@
 #
 import os
 import gzip
+import logging
 
 from StringIO import StringIO
-
+from zope.interface import alsoProvides
 from pyramid.renderers import render
 from pyramid.response import Response
+from pyramid.httpexceptions import HTTPFound
 
 from outpost import filtermanager
 
-def template(response, request, settings, url):
+def template(response, request, filterconf, url):
     """
     Templating filter
     -----------------
@@ -43,7 +45,7 @@ def template(response, request, settings, url):
           ]
 
     """
-    tmpl = settings.get("template")
+    tmpl = filterconf.settings.get("template")
     if not tmpl:
         return response
     # extend relative path
@@ -58,14 +60,14 @@ def template(response, request, settings, url):
     if not tmpl:
         return response
     values = {"content": response.unicode_body, "response": response}
-    v2 = settings.get("values")
+    v2 = filterconf.settings.get("values")
     if v2 and isinstance(v2, dict):
         values.update(v2)
     response.unicode_body = render(tmpl, values, request=request)
     return response
 
 
-def replacestr(response, request, settings, url):
+def replacestr(response, request, filterconf, url):
     """
     Simple string replacer
     ----------------------
@@ -92,6 +94,7 @@ def replacestr(response, request, settings, url):
           ]
 
     """
+    settings = filterconf.settings
     if not settings:
         return response
     # process
@@ -102,7 +105,7 @@ def replacestr(response, request, settings, url):
     return response
 
 
-def rewrite_urls(response, request, settings, url):
+def rewrite_urls(response, request, filterconf, url):
     """
     Rewirite proxied urls
     ----------------------
@@ -126,7 +129,7 @@ def rewrite_urls(response, request, settings, url):
     return response
 
 
-def compress(response, request, settings, url):
+def compress(response, request, filterconf, url):
     """
     Compress response body
     ----------------------
@@ -158,7 +161,7 @@ def compress(response, request, settings, url):
     return response
 
 
-def add_header(response, request, settings, url):
+def add_header(response, request, filterconf, url):
     """
     Add a http header
     ----------------------
@@ -175,8 +178,8 @@ def add_header(response, request, settings, url):
           ]
 
     """
-    name = str(settings.get("name"))
-    value = str(settings.get("value"))
+    name = str(filterconf.settings.get("name"))
+    value = str(filterconf.settings.get("value"))
     if name:
         if name in response.headers:
             del response.headers[name]
@@ -185,9 +188,31 @@ def add_header(response, request, settings, url):
     return response
 
 
+def redirect(response, request, filterconf, url):
+    """
+    Redirect to url
+    ---------------
+    Triggers a immedeat redirect.
+
+    Example ini file section ::
+
+        filter = [
+          {"callable": "outpost.filterinc.redirect",
+           "hook": "pre",
+           "path": "/",
+           "settings": {"url": "default_path"},
+           "name": "redirect"}
+          ]
+
+    """
+    # do not cache responses loaded from cache
+    url = filterconf.settings.get("url") or request.registry.settings.get("server.default_path")
+    raise HTTPFound(location=url)
+
+
 __file_cache__ = {}
 
-def cache_write(response, request, settings, url):
+def cache_write(response, request, filterconf, url):
     """
     Write response to cache
     -----------------------
@@ -206,18 +231,22 @@ def cache_write(response, request, settings, url):
 
     """
     # do not cache responses loaded from cache
-    if request.environ.get("cache-hit"):
+    if request.environ.get("outpost.cache-hit"):
         return response
-    if response.status_int!=200 or request.method=="post":
+    if response.status_int!=200 or request.method=="POST":
         return response
 
     global __file_cache__
-    # todo handle request type if response is none
     path = url.fullPath
-    __file_cache__[path] = (response.body, response.status_code, response.headers)
+    hp = str(hash(path))
+    if filtermanager.IProxyRequest.providedBy(response):
+        rtype = "proxy"
+    else:
+        rtype = "file"
+    __file_cache__[hp] = (response.body, response.status_code, response.headers, rtype)
     return response
 
-def cache_read(response, request, settings, url):
+def cache_read(response, request, filterconf, url):
     """
     Read response from cache
     -----------------------
@@ -239,23 +268,28 @@ def cache_read(response, request, settings, url):
     """
     global __file_cache__
     path = url.fullPath
-    if not path in __file_cache__:
+    hp = str(hash(path))
+    if not hp in __file_cache__:
         return None
-    body, status_code, headers = __file_cache__[path]
+    body, status_code, headers, rtype = __file_cache__[hp]
     response = Response(body=body, status=status_code)
     response.headers.update(headers)
-    request.environ['cache-hit'] = True
-    # todo handle request type if cached
-    #alsoProvides(response, filtermanager.IProxyRequest)
-    if settings.get("abort")!=False:
+    request.environ['outpost.cache-hit'] = True
+    log = logging.getLogger("outpost.proxy")
+    log.debug("cache hit %s" % path)
+    if rtype == "proxy":
+        alsoProvides(response, filtermanager.IProxyRequest)
+    else:
+        alsoProvides(response, filtermanager.IFileRequest)
+    if filterconf.settings.get("abort") is not False:
         raise filtermanager.ResponseFinished(response=response)
     return response
 
 
 # quick and dirty string filter callables
 
-def appendhead(response, request, settings, url):
-    htmlfile = settings.get("appendhead")
+def appendhead(response, request, filterconf, url):
+    htmlfile = filterconf.settings.get("appendhead")
     if not htmlfile:
         return response
     try:
@@ -268,8 +302,8 @@ def appendhead(response, request, settings, url):
     return response
 
 
-def appendbody(response, request, settings, url):
-    htmlfile = settings.get("appendbody")
+def appendbody(response, request, filterconf, url):
+    htmlfile = filterconf.settings.get("appendbody")
     if not htmlfile:
         return response
     try:

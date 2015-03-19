@@ -22,6 +22,7 @@ class IFileRequest(Interface):
        IFileRequest.providedBy(response)
 
     """
+
 class IProxyRequest(Interface):
     """
     IProxyRequest is used to mark proxy responses and can be used in filters to
@@ -30,6 +31,14 @@ class IProxyRequest(Interface):
        IProxyRequest.providedBy(response)
 
     """
+
+class EmptyProxyResponse(object):
+    implements(IProxyRequest)
+    status_int = 200
+
+class EmptyFileResponse(object):
+    implements(IFileRequest)
+    status_int = 200
 
 
 class FilterConf(object):
@@ -71,13 +80,14 @@ class FilterConf(object):
     implements(IFilter)
 
     callable=None
+    apply_to=None
     hook="post"
+    path=None
     content_type=None
     environ=None
+    status=200  # defaults to 200
     sub_filter=None
     is_sub_filter=False
-    path=None
-    apply_to=None
     settings=None
     name=""
 
@@ -107,6 +117,24 @@ class FilterConf(object):
             fc.path = re.compile(fc.path)
         if fc.content_type:
             fc.content_type = re.compile(fc.content_type)
+        if fc.hook=="post" and fc.status is None:
+            fc.status=200
+        # set up status lambda
+        if fc.status is not None:
+            s = fc.status
+            if isinstance(s, int):
+                fc.status = lambda status: status==s
+            elif isinstance(s, (list, tuple)):
+                fc.status = lambda status: status in s
+            else:
+                # should be a string
+                if s.startswith("not:"):
+                    s = int(s.replace("not:", ""))
+                    fc.status = lambda status: status!=s
+                else:
+                    s = int(s)
+                    fc.status = lambda status: status==s
+
         return fc
 
     def __str__(self):
@@ -132,16 +160,18 @@ def runPreHook(response, request, url):
     """
     Lookup and apply filters for response/request
 
-    :param response:
+    :param response: empty response providing the request interface
     :param request:
     :param url:
+    :param rtype:
     :return: response
     """
     log = logging.getLogger("outpost.filter")
+    filteredResponse = None
     for ff in lookupFilter("pre", response, request, url):
         log.debug("pre %s: %s" % (ff.name or str(ff.callable), str(url)))
-        response = applyFilter(ff, response, request, url)
-    return response
+        filteredResponse = applyFilter(ff, filteredResponse, request, url)
+    return filteredResponse
 
 
 def runPostHook(response, request, url):
@@ -173,14 +203,14 @@ def lookupFilter(hook, response, request, url):
     all = request.registry.settings["filter"]
     #matched = []
     for ff in all:
+        # match pre/post hook
+        if ff.hook != hook:
+            continue
         # match sub filter
         if ff.is_sub_filter:
             if ff.name in request.environ.get("outpost.sub_filter", ()):
                 #matched.append(ff)
                 yield ff
-            continue
-        # match pre/post hook
-        if ff.hook != hook:
             continue
         # match response type
         if ff.apply_to:
@@ -191,11 +221,15 @@ def lookupFilter(hook, response, request, url):
             continue
         # match path
         if ff.path:
-            if not ff.path.search(str(url)):
+            if not ff.path.search(url.path):
                 continue
         # match content type
         if ff.content_type:
             if not ff.content_type.search(response.content_type):
+                continue
+        # match status
+        if ff.status:
+            if not ff.status(response.status_int):
                 continue
         yield ff
     #return matched
@@ -212,7 +246,7 @@ def applyFilter(filterconf, response, request, url):
     :return: response
     """
     # load filter.
-    response = filterconf.callable(response, request, filterconf.settings, url)
+    response = filterconf.callable(response, request, filterconf, url)
     _trackFilter(filterconf, request)
     # activate subfilter
     _activateSubFilter(filterconf, request)
@@ -259,7 +293,7 @@ def parseJsonString(jsonstr, exitOnTestFailure=True):
         else:
             ok.append(tf)
             log.info("Loaded %s filter %s (%s) for %s"%(tf.hook, str(tf), repr(tf.callable),
-                                                              tf.apply_to or "all requests"))
+                                                        tf.apply_to or "all requests"))
     if exitOnTestFailure and err:
         raise ConfigurationError("Invalid filter configurations found. See error log for details.")
     return ok

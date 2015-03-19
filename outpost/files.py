@@ -42,49 +42,51 @@ class FileServer(object):
         # run pre proxy request hooked filters
         # if the filter returns a response and not None. The response is returned
         # immediately
-        proxy_response = filtermanager.runPreHook(None, self.request, self.url)
-        if proxy_response:
-            return proxy_response
+        try:
+            file = filtermanager.runPreHook(filtermanager.EmptyFileResponse(), self.request, self.url)
+        except filtermanager.ResponseFinished, e:
+            return e.response
 
-        df = settings.get("server.default_path")
-        # bw 0.2.6
-        if df is None:
-            df = settings.get("server.defaultfile")
-        if df:
-            static = static_view(root_dir=settings["files.directory"], 
-                                 use_subpath=True, 
-                                 index=df)
-        else:
-            static = static_view(root_dir=settings["files.directory"], 
-                                 use_subpath=True)
-        file = static(self.context, self.request)
-        alsoProvides(file, filtermanager.IFileRequest)
+        if file is None:
+            df = settings.get("server.default_path")
+            # bw 0.2.6
+            if df is None:
+                df = settings.get("server.defaultfile")
+            if df:
+                static = static_view(root_dir=settings["files.directory"],
+                                     use_subpath=True,
+                                     index=df)
+            else:
+                static = static_view(root_dir=settings["files.directory"],
+                                     use_subpath=True)
+            file = static(self.context, self.request)
+            alsoProvides(file, filtermanager.IFileRequest)
 
-        # adjust headers
-        file.headers["Cache-control"] = "no-cache"
-        file.headers["Pragma"] = "no-cache"
-        file.headers["Expires"] = "0"
-        if "Last-Modified" in file.headers:
-            del file.headers["Last-Modified"]
-        # set default mime type to text/html
-        if len(self.request.subpath):
-            name = self.request.subpath[-1]
-        else:
-            name = df
+            # adjust headers
+            #file.headers["Cache-control"] = "no-cache"
+            #file.headers["Pragma"] = "no-cache"
+            #file.headers["Expires"] = "0"
+            #if "Last-Modified" in file.headers:
+            #    del file.headers["Last-Modified"]
+            # set default mime type to text/html
+            if len(self.request.subpath):
+                name = self.request.subpath[-1]
+            else:
+                name = df
 
-        # cache content type
-        global __ct_cache__
-        ext = ".".join(name.split(".")[1:])
-        if ext in __ct_cache__:
-            ct = __ct_cache__[ext]
-        else:
-            ct = guess_type(name, strict=False)[0] or settings.get("server.content_type")
-            __ct_cache__[ext] = ct
+            # cache content type
+            global __ct_cache__
+            ext = ".".join(name.split(".")[1:])
+            if ext in __ct_cache__:
+                ct = __ct_cache__[ext]
+            else:
+                ct = guess_type(name, strict=False)[0] or settings.get("server.content_type")
+                __ct_cache__[ext] = ct
 
-        file.headers["Content-Type"] = ct
-        file.content_type = ct
-        file.charset = settings.get("files.charset") or "utf-8"
-        
+            file.headers["Content-Type"] = ct
+            file.content_type = ct
+            file.charset = settings.get("files.charset") or "utf-8"
+
         if self.debug:
             server_trace = settings.get("files.trace")
             # bw 0.2.6 renamed setting
@@ -137,7 +139,7 @@ class FileUrlHandler(object):
 
     @property
     def destUrl(self):
-        return "//file/%s/%s%s" % (self.protocol, self.host, self.path)
+        return "//%s/%s%s" % (self.protocol, self.host, self.path)
 
     @property
     def srcUrl(self):
