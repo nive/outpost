@@ -40,9 +40,6 @@ class Proxy(object):
     Streaming is currently not supported.
     """
     
-    # request session cache on module level, supports keep-alive connections
-    usesession = True
-
     def __init__(self, url, request, debug):
         self.request = request
         self.url = url
@@ -93,8 +90,9 @@ class Proxy(object):
             else:
                 parameter["data"] = request.body
 
-            # handle session if activated
-            if self.usesession:
+            # request session cache on module level, supports keep-alive connections
+            usesession = settings.get("proxy.session", True)
+            if usesession:
                 global __session_cache__
                 if not __session_cache__:
                     __session_cache__ = requests.Session()
