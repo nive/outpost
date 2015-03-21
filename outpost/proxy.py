@@ -96,6 +96,9 @@ class Proxy(object):
                 global __session_cache__
                 if not __session_cache__:
                     __session_cache__ = requests.Session()
+                    if settings.get("proxy.retry"):
+                        adapter = requests.adapters.HTTPAdapter(max_retries=int(settings.get("proxy.retry")),pool_connections=20,pool_maxsize=30)
+                        __session_cache__.mount("http://", adapter)
                 session = __session_cache__
             else:
                 session = requests
