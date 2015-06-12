@@ -1,8 +1,9 @@
-0.3.1 Mar 2015
+0.3.1 - Jun 2015
 --------------
 - renamed configuration applTo to apply_to
 - renamed configuration files.defaultfile to server.default_path (works for proxy too)
 - added server.fallback option (files or proxy)
+- scaffold and filter update
 
 0.3.0 - Feb 2015
 ----------------

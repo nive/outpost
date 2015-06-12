@@ -2,19 +2,18 @@
 Outpost 
 =======
 
-**local-javascript-application development server**
+**Application level proxy server**
 
-Outpost is a file server with integrated proxy, filter options and 
-debugging tools. 
-
-It is meant to be used for local javascript application development 
-in combination with remote web api services. The build in proxy
-prevents browsers `Cross Origin Resource Scripting` restrictions
-by routing all requests through a single (local) address.
+Outpost combines proxy, static file serving and application
+framework functionality in a single server application.
 
 Advanced options include request debugging and stream filter.
 
-In combination with Chrome or Firefox browsers build in developer tools 
+Outpost also supports local javascript application development
+in combination with remote web api services. The build in proxy
+prevents browsers `Cross Origin Resource Scripting` restrictions
+by routing all requests through a single (local) address. In combination
+with Chrome or Firefox browsers build in developer tools
 Outpost gives a additional option to debug, alter and trace outgoing
 and incoming requests before being processed by the browser (or after the
 request has been send). Single requests can be stopped based on url 
@@ -29,11 +28,10 @@ Features
 
 - Serves static files from a directory
 - Routes webservice requests through the proxy
-- Supports sessions and cookies
+- Session and cookie support for proxied requests
+- Custom filter support
 - Single and multiple concurrent connections
 - Interactive request hacking and tracing
-- Insert html snippets in served files
-- Filter support
 - Easy installation, runs on any os
 
 
