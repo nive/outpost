@@ -15,6 +15,9 @@ files.route = {{files}}
 # or domain name including optional port e.g. mydomain.nive.io.
 proxy.host = {{host}}
 proxy.protocol = http
+proxy.timeout = 60
+proxy.session = True
+proxy.retry = 3
 
 # The url prefix used to route requests through the proxy. Use any path spec e.g '/webapi'
 # to activate proxying for mathing urls. Urls are mapped 1:1 to the proxy host.
@@ -22,9 +25,11 @@ proxy.protocol = http
 # virtual directory structure.
 proxy.route = {{proxy}}
 
+# Specifies the fallback for not explicitly matching routes. Either `files` or `proxy`.
+server.fallback = files
 server.default_path = index.html
 server.content_type = text/html; charset=UTF-8
-server.fallback = files
+
 
 #################################################################################
 # Filter and templating
@@ -32,12 +37,36 @@ server.fallback = files
 # A list of filters for reponse processing e.g.
 #
 #  filter = [
+#    {"callable": "outpost.filterinc.redirect",
+#     "hook": "pre",
+#     "path": "^/(mysite|mysite/db/)$",
+#     "settings": {"url": ""},
+#     "name": "redirect"
+#    },
 #    {"callable": "outpost.filterinc.replacestr",
 #     "apply_to": "proxy",
 #     "content_type": "text/html",
 #     "settings": {"str": "My Title", "new": "HUAH"},
-#     "name": "strfilter"}
-#    ]
+#     "name": "strfilter"
+#    },
+#    {"callable": "my_package.views.listing",
+#     "hook": "post",
+#     "apply_to": "proxy",
+#     "content_type": "text/html",
+#     "path": "mysite(/index.html|/index_html)",
+#     "sub_filter": "maintmpl",
+#     "settings": {}
+#    },
+#    {"callable": "outpost.filterinc.template",
+#     "name": "maintmpl",
+#     "hook": "post",
+#     "is_sub_filter": true,
+#     "settings": {"template": "my_package:templates/maintmpl.pt",
+#                  "values": {"local": "/mysite/mobile/",
+#                             "path": "/mysite/db/"}
+#                 }
+#    }
+#  ]
 #
 # Have alook at the docs for all options or how to include your own filter.
 
@@ -59,6 +88,7 @@ files.trace =
 # expression as parameter, the server breaks only if the re matches.
 # e.g. datastore/api/setItem.
 proxy.trace =
+
 
 #################################################################################
 # Server setup
