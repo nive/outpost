@@ -79,10 +79,6 @@ def replacestr(response, request, filterconf, url):
 
         {"str": "old", "new": "new"}
 
-    or ::
-
-        [{"str": "old", "new": "new"}, {"str": "also", "new": "new"}]
-
     Example ini file section ::
 
         filter = [
@@ -98,10 +94,7 @@ def replacestr(response, request, filterconf, url):
     if not settings:
         return response
     # process
-    if not isinstance(settings, (list,tuple)):
-        settings = (settings,)
-    for repl in settings:
-        response.unicode_body = response.unicode_body.replace(repl["str"], repl["new"])
+    response.unicode_body = response.unicode_body.replace(settings["str"], settings["new"])
     return response
 
 

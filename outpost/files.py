@@ -129,7 +129,7 @@ class FileUrlHandler(object):
             self.path = "/"+self.path
 
     def __str__(self):
-        return self.destUrl
+        return self.path
 
     @property
     def fullPath(self):
