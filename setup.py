@@ -19,7 +19,7 @@ except:
 
 setup(name='outpost',
       version='0.3.1',
-      description='Local javascript application development server',
+      description='Application level proxy server',
       long_description=README,
       classifiers=[
         "Programming Language :: Python",
@@ -46,5 +46,5 @@ setup(name='outpost',
         [pyramid.scaffold]
         outpost=outpost.scaffolds:DefaultTemplate
       """
-      )
+)
 
