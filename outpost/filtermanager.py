@@ -35,10 +35,12 @@ class IProxyRequest(Interface):
 class EmptyProxyResponse(object):
     implements(IProxyRequest)
     status_int = 200
+    content_type = ""
 
 class EmptyFileResponse(object):
     implements(IFileRequest)
     status_int = 200
+    content_type = ""
 
 
 class FilterConf(object):
