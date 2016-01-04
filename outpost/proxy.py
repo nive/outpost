@@ -46,9 +46,9 @@ class Proxy(object):
         self.debug = debug
 
     def response(self):
-        log = logging.getLogger("outpost.proxy")
         request = self.request
         settings = request.registry.settings
+        request.environ["proxy"] = self
 
         #path = settings.get("server.default_path")
         #if path and self.url.path=="/":
@@ -63,66 +63,7 @@ class Proxy(object):
             return e.response
 
         if response is None:
-            url = self.url.destUrl
-
-            # prepare headers
-            headers = {}
-            for h,v in request.headers.environ.items():
-                h = h.lower()
-                if h.startswith(("server_", "wsgi", "bfg", "webob", "outpost")):
-                    continue
-                if h.startswith("http_"):
-                    headers[h[5:]] = v
-                elif h.find("_")!=-1:
-                    headers[h.replace("_", "-")] = v
-                else:
-                    headers[h] = v
-
-            headers["host"] = self.url.host
-            headers["info"] = self.url.path
-            if "content-length" in headers:
-                del headers["content-length"]
-
-            params = dict(request.params)
-            parameter = {"headers": headers, "cookies": request.cookies, "timeout": float(settings.get("proxy.timeout"))}
-            if request.method.lower() == "get":
-                parameter["params"] = params
-            else:
-                parameter["data"] = request.body
-
-            # request session cache on module level, supports keep-alive connections
-            usesession = settings.get("proxy.session", True)
-            if usesession:
-                global __session_cache__
-                if not __session_cache__:
-                    __session_cache__ = requests.Session()
-                    if settings.get("proxy.retry"):
-                        adapter = requests.adapters.HTTPAdapter(max_retries=int(settings.get("proxy.retry")),pool_connections=20,pool_maxsize=30)
-                        __session_cache__.mount("http://", adapter)
-                session = __session_cache__
-            else:
-                session = requests
-
-            # trace in debugger
-            method = request.method
-            if self.debug and settings.get("proxy.trace") and re.search(settings["proxy.trace"], url):
-                pdb.set_trace()
-            try:
-                response = session.request(method, url, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response. (c) to continue. (Python debugger)
-                body = response.content
-                # status codes 200 - 299 are considered as success
-                if 200 <= response.status_code < 300:
-                    size = response.raw.tell()
-                    log.debug("%s %s, %d bytes in %d ms %s" % (method, response.status_code, size,
-                                                               response.elapsed.microseconds/1000, self.url.destUrl))
-                else:
-                    log.debug("%s: %s %s, in %d ms %s" % (method, response.status_code, response.reason,
-                                                          response.elapsed.microseconds/1000, self.url.destUrl))
-            except Exception, e:
-                #todo excp types
-                log.debug("%s %s" % (str(e), self.url.destUrl))
-                response = Response(body=str(e), status=500)
-                body = response.body
+            response, body = self.proxy(self.url, request)
 
         else:
             # pre hook returned response
@@ -157,6 +98,68 @@ class Proxy(object):
         return proxy_response
 
 
+    def proxy(self, url, request, method=None, params=None):
+        log = logging.getLogger("outpost.proxy")
+        settings = request.registry.settings
+
+        # prepare headers
+        headers = {}
+        for h,v in request.headers.environ.items():
+            h = h.lower()
+            if h.startswith(("server_", "wsgi", "bfg", "webob", "outpost")):
+                continue
+            if h.startswith("http_"):
+                headers[h[5:]] = v
+            elif h.find("_")!=-1:
+                headers[h.replace("_", "-")] = v
+            else:
+                headers[h] = v
+
+        headers["host"] = url.host
+        headers["info"] = url.path
+        if "content-length" in headers:
+            del headers["content-length"]
+
+        parameter = {"headers": headers, "cookies": request.cookies, "timeout": float(settings.get("proxy.timeout"))}
+        if request.method.lower() == "get":
+            parameter["params"] = params or dict(request.params)
+        else:
+            parameter["data"] = params or request.body
+
+        # request session cache on module level, supports keep-alive connections
+        usesession = settings.get("proxy.session", True)
+        if usesession:
+            global __session_cache__
+            if not __session_cache__:
+                __session_cache__ = requests.Session()
+                if settings.get("proxy.retry"):
+                    adapter = requests.adapters.HTTPAdapter(max_retries=int(settings.get("proxy.retry")),pool_connections=20,pool_maxsize=30)
+                    __session_cache__.mount("http://", adapter)
+            session = __session_cache__
+        else:
+            session = requests
+
+        # trace in debugger
+        method = method or request.method
+        if self.debug and settings.get("proxy.trace") and re.search(settings["proxy.trace"], url.destUrl):
+            pdb.set_trace()
+        try:
+            response = session.request(method, url.destUrl, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response. (c) to continue. (Python debugger)
+            body = response.content
+            # status codes 200 - 299 are considered as success
+            if 200 <= response.status_code < 300:
+                size = response.raw.tell()
+                log.debug("%s %s, %d bytes in %d ms %s" % (method, response.status_code, size,
+                                                           response.elapsed.microseconds/1000, url.destUrl))
+            else:
+                log.debug("%s: %s %s, in %d ms %s" % (method, response.status_code, response.reason,
+                                                      response.elapsed.microseconds/1000, url.destUrl))
+        except Exception, e:
+            #todo excp types
+            log.debug("%s %s" % (str(e), url.destUrl))
+            response = Response(body=str(e), status=500)
+            body = response.body
+        return response, body
 
 
 class ProxyUrlHandler(object):
