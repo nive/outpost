@@ -4,6 +4,7 @@
 import os
 import gzip
 import logging
+import re
 
 from StringIO import StringIO
 from zope.interface import alsoProvides
@@ -94,7 +95,8 @@ def replacestr(response, request, filterconf, url):
     if not settings:
         return response
     # process
-    response.unicode_body = response.unicode_body.replace(settings["str"], settings["new"])
+    response.unicode_body = re.sub(settings["str"], settings["new"], response.unicode_body)
+    #response.unicode_body = response.unicode_body.replace(settings["str"], settings["new"])
     return response
 
 

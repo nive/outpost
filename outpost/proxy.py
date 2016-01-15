@@ -128,7 +128,7 @@ class Proxy(object):
             h = h.lower()
             if h.startswith(("server_", "wsgi", "bfg", "webob", "outpost")):
                 continue
-            if h.startswith("http_"):
+            elif h.startswith("http_"):
                 headers[h[5:]] = v
             elif h.find("_")!=-1:
                 headers[h.replace("_", "-")] = v
