@@ -69,21 +69,41 @@ class Proxy(object):
             # pre hook returned response
             body = response.body
 
+        def removeHeader(key, values):
+            # the default header key should be the stabdard capitilized version e.g 'Content-Length'
+            try:
+                del headers[key]
+            except KeyError:
+                try:
+                    del headers[key.lower()]
+                except KeyError:
+                    try:
+                        del headers[key.upper()]
+                    except KeyError:
+                        pass
+
         headers = dict(response.headers)
-        if 'content-length' in headers:
-            del headers['content-length']
-        if 'transfer-encoding' in headers:
-            del headers['transfer-encoding']
-        if 'content-encoding' in headers:
-            del headers['content-encoding']
-        if 'connection' in headers:
-            del headers['connection']
-        if 'keep-alive' in headers:
-            del headers['keep-alive']
-        
+        keys = [k.lower() for k in headers.keys()]
+        if 'content-length' in keys:
+            removeHeader('Content-Length', headers)
+        if 'transfer-encoding' in keys:
+            removeHeader('Transfer-Encoding', headers)
+        if 'content-encoding' in keys:
+            removeHeader('Content-Encoding', headers)
+        if 'connection' in keys:
+            removeHeader('Connection', headers)
+        if 'keep-alive' in keys:
+            removeHeader('Keep-Alive', headers)
+
         # cookies
-        if 'set-cookie' in headers:
-            cookie = headers['set-cookie']
+        if 'set-cookie' in keys:
+            try:
+                cookie = headers['Set-Cookie']
+            except KeyError:
+                try:
+                    cookie = headers['set-cookie']
+                except KeyError:
+                    cookie = headers['SET-COOKIE']
             host = request.host.split(":")[0]
             cookie = cookie.replace(str(self.url.host), host)
             headers['set-cookie'] = cookie
