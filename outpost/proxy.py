@@ -206,6 +206,8 @@ class ProxyUrlHandler(object):
     - destDomain: valid proxy destination domain
     - srcUrl: embedded proxy url
     - srcDomain: embedded proxy domain
+    - srcPath: part of source url to be replace by destPath
+    - destPath: part to be replaced in proxied urls
     
     Methods:
     - rewriteUrls()
@@ -218,6 +220,15 @@ class ProxyUrlHandler(object):
         self.qs = request.query_string
         if not self.path.startswith("/"):
             self.path = "/"+self.path
+        self.pathrewrite = None
+        rw = settings.get("proxy.rewrite")
+        if rw:
+            rw = rw.strip()
+            if rw:
+                parts = rw.split(" ")
+                if not len(parts)>1:
+                    raise TypeError("Invalid configuration value proxy.rewrite")
+                self.pathrewrite = (parts[0], parts[-1])
 
     def __str__(self):
         return self.path
@@ -225,12 +236,12 @@ class ProxyUrlHandler(object):
     @property
     def fullPath(self):
         if self.qs:
-            return "%s://%s%s?%s" % (self.protocol, self.host, self.path, self.qs)
-        return "%s://%s%s" % (self.protocol, self.host, self.path)
+            return "%s://%s%s?%s" % (self.protocol, self.host, self.rewritePath(self.path), self.qs)
+        return "%s://%s%s" % (self.protocol, self.host, self.rewritePath(self.path))
 
     @property
     def destUrl(self):
-        return "%s://%s%s" % (self.protocol, self.host, self.path)
+        return "%s://%s%s" % (self.protocol, self.host, self.rewritePath(self.path))
 
     @property
     def srcUrl(self):
@@ -243,8 +254,15 @@ class ProxyUrlHandler(object):
     @property
     def srcDomain(self):
         return ""
-    
+
+    def rewritePath(self, path):
+        # rewrites the outgoing path befrore proxy the request
+        if self.pathrewrite is None:
+            return path
+        return path.replace(self.pathrewrite[0], self.pathrewrite[1])
+
     def rewriteUrls(self, body):
+        # rewrites urls in the requests body before returning the response to the client
         return body.replace(self.destDomain, self.srcDomain)
 
 
