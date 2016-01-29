@@ -19,10 +19,7 @@ def callProxy(request):
     settings = request.registry.settings
     route = settings.get("proxy.route")
     # todo pluggable url handlers
-    if route=="__proxy":
-        url = VirtualPathProxyUrlHandler(request, settings)
-    else:
-        url = ProxyUrlHandler(request, settings)
+    url = ProxyUrlHandler(request, settings)
     proxy = Proxy(url, request, debug=settings.get("debug"))
     return proxy.response()
 
@@ -50,13 +47,10 @@ class Proxy(object):
         settings = request.registry.settings
         request.environ["proxy"] = self
 
-        #path = settings.get("server.default_path")
-        #if path and self.url.path=="/":
-        #    self.url.path = path
-
-        # run pre proxy request hooked filters
-        # if the filter returns a response and not None. The response is returned
-        # immediately
+        # Run pre proxy request hooked filters
+        # If the filter raises `ResponseFinished` processing is stopped and the response returned.
+        # If runPreHook returns a response and not None the proxy call is not triggered and and
+        # post hooks are processed for the returned response.
         try:
             response = filtermanager.runPreHook(filtermanager.EmptyProxyResponse(), request, self.url)
         except filtermanager.ResponseFinished, e:
@@ -70,7 +64,7 @@ class Proxy(object):
             body = response.body
 
         def removeHeader(key, values):
-            # the default header key should be the stabdard capitilized version e.g 'Content-Length'
+            # the default header key should be the standard capitilized version e.g 'Content-Length'
             try:
                 del headers[key]
             except KeyError:
@@ -82,6 +76,7 @@ class Proxy(object):
                     except KeyError:
                         pass
 
+        # clean up headers
         headers = dict(response.headers)
         keys = [k.lower() for k in headers.keys()]
         if 'content-length' in keys:
@@ -226,9 +221,9 @@ class ProxyUrlHandler(object):
             rw = rw.strip()
             if rw:
                 parts = rw.split(" ")
-                if not len(parts)>1:
+                if not len(parts)==2:
                     raise TypeError("Invalid configuration value proxy.rewrite")
-                self.pathrewrite = (parts[0], parts[-1])
+                self.pathrewrite = (parts[0], parts[1])
 
     def __str__(self):
         return self.path
@@ -264,86 +259,4 @@ class ProxyUrlHandler(object):
     def rewriteUrls(self, body):
         # rewrites urls in the requests body before returning the response to the client
         return body.replace(self.destDomain, self.srcDomain)
-
-
-class VirtualPathProxyUrlHandler(object):
-    """
-    Handles proxied urls and converts them between source and destination.
-
-    e.g. the incoming Request/URL ::
-
-      http://localhost:5556/___proxy/http/test.nive.co/datastore/api/keys
-
-    will be translated to the destination url ::
-
-      http://test.nive.co/datastore/api/keys
-
-    Also urls in response bodies can be converted back to the source url.
-
-    Attributes:
-    - protocol: http or https
-    - domainname: without protocol, including port
-    - path: path without protocol and domain
-    - destUrl: valid proxy destination url
-    - destDomain: valid proxy destination domain
-    - srcUrl: embedded proxy url
-    - srcDomain: embedded proxy domain
-
-    Methods:
-    - rewriteUrls()
-
-    """
-    defaultProtocol = "http"
-    defaultPrefix = "/__proxy/"
-
-    def __init__(self, request, settings):
-        urlparts = request.matchdict["subpath"]     # urlparts is the source url in list form
-        host = settings.get("proxy.host")
-        placeholder = settings.get("proxy.domainplaceholder","__domain")
-        self.qs = request.query_string
-        # bw 0.2.6
-        if host is None:
-            host = settings.get("proxy.domain")
-
-        self.prefix = self.defaultPrefix
-        if not urlparts[0] in ("http","https"):
-            self.protocol = self.defaultProtocol
-            self.host = urlparts[0]
-            self.path = "/".join(urlparts[1:])
-        else:
-            self.protocol = urlparts[0]
-            self.host = urlparts[1]
-            self.path = "/".join(urlparts[2:])
-        if placeholder and host:
-            if self.host == placeholder:
-                self.host = host
-
-    def __str__(self):
-        return self.path
-
-    @property
-    def fullPath(self):
-        if self.qs:
-            return "%s://%s%s?%s" % (self.protocol, self.host, self.path, self.qs)
-        return "%s://%s%s" % (self.protocol, self.host, self.path)
-
-    @property
-    def destUrl(self):
-        return "%s://%s/%s" % (self.protocol, self.host, self.path)
-
-    @property
-    def srcUrl(self):
-        return "/%s/%s/%s" % (self.protocol, self.host, self.path)
-
-    @property
-    def destDomain(self):
-        return "%s://%s" % (self.protocol, self.host)
-
-    @property
-    def srcDomain(self):
-        return "/%s/%s" % (self.protocol, self.host)
-
-    def rewriteUrls(self, body):
-        return body.replace(self.destDomain.encode("utf-8"), ("/__proxy"+self.srcDomain).encode("utf-8"))
-
 

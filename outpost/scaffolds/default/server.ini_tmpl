@@ -18,11 +18,10 @@ proxy.protocol = http
 proxy.timeout = 60
 proxy.session = True
 proxy.retry = 3
+proxy.rewrite =
 
 # The url prefix used to route requests through the proxy. Use any path spec e.g '/webapi'
 # to activate proxying for mathing urls. Urls are mapped 1:1 to the proxy host.
-# A special configuration value: Use `__proxy` as proxy.route value to insert a
-# virtual directory structure.
 proxy.route = {{proxy}}
 
 # Specifies the fallback for not explicitly matching routes. Either `files` or `proxy`.
