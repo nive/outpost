@@ -1,3 +1,9 @@
+0.3.3 - Feb 2016
+--------------
+- added proxy.rewrite configuration option
+- removed default '__proxy' url handling
+- filter.replacestr added regex support
+
 0.3.2 - Jan 2016
 --------------
 - fixed response header processing for capitalized/upper/lower case header
