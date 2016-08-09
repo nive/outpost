@@ -123,6 +123,8 @@ class Proxy(object):
             h = h.lower()
             if h.startswith(("server_", "wsgi", "bfg", "webob", "outpost")):
                 continue
+            elif h in ("proxy",):
+                continue
             elif h.startswith("http_"):
                 headers[h[5:]] = v
             elif h.find("_")!=-1:
@@ -171,9 +173,8 @@ class Proxy(object):
                                                       response.elapsed.microseconds/1000, url.destUrl))
         except Exception, e:
             #todo excp types
-            log.debug("%s %s" % (str(e), url.destUrl))
-            response = Response(body=str(e), status=500)
-            body = response.body
+            log.error("%s %s" % (str(e), url.destUrl))
+            raise
         return response, body
 
 
