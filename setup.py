@@ -18,7 +18,7 @@ except:
     README = ''
 
 setup(name='outpost',
-      version='0.3.3',
+      version='0.3.4',
       description='Application level proxy server',
       long_description=README,
       classifiers=[
