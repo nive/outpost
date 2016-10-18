@@ -100,7 +100,8 @@ class Proxy(object):
                 except KeyError:
                     cookie = headers['SET-COOKIE']
             host = request.host.split(":")[0]
-            cookie = cookie.replace(str(self.url.host), host)
+            local = str(self.url.host).split(":")[0]
+            cookie = cookie.replace(local, host)
             headers['set-cookie'] = cookie
             
         proxy_response = Response(body=body, status=response.status_code)
@@ -160,8 +161,8 @@ class Proxy(object):
         method = method or request.method
         if self.debug and settings.get("proxy.trace") and re.search(settings["proxy.trace"], url.destUrl):
             pdb.set_trace()
-        try:
-            response = session.request(method, url.destUrl, **parameter) #=> Ready to proxy the current request. Step once (n) to get the response. (c) to continue. (Python debugger)
+        try: #=> Ready to proxy the current request. Step once (n) to get the response. (c) to continue. Stack: method, url, parameter
+            response = session.request(method, url.destUrl, **parameter)
             body = response.content
             # status codes 200 - 299 are considered as success
             if 200 <= response.status_code < 300:
