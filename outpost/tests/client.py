@@ -77,22 +77,23 @@ def report(stats, runtime):
                 if not file in sizes:
                     sizes[file] = req[3]
 
-    print
-    print "Finished", total, "requests in", "%.04f"%runtime, "seconds"
-    print "success: ", ok
-    print "errors:  ", len(errors)
-    print "download:", "%.04f"%(dl/1024.0/1000.0), "MB"
-    print
+    print("")
+    print("Finished", total, "requests in", "%.04f"%runtime, "seconds")
+    print("success: ", ok)
+    print("errors:  ", len(errors))
+    print("download:", "%.04f"%(dl/1024.0/1000.0), "MB")
+    print("")
+
     mlen = 10
     for file in files:
         if len(file)>mlen:
             mlen = len(file)
     for file in files:
         fl = files[file]
-        print file, " "*(mlen-len(file)), "- avg", "%.04f"%(sum(fl)/len(fl)), " min", "%.04f"%min(fl), " max", "%.04f"%max(fl), " size", sizes[file]
+        print(file, " "*(mlen-len(file)), "- avg", "%.04f"%(sum(fl)/len(fl)), " min", "%.04f"%min(fl), " max", "%.04f"%max(fl), " size", sizes[file])
 
     for err in errors:
-        print err
+        print(err)
 
     return
 
@@ -149,17 +150,17 @@ if __name__ == "__main__":
     try:
         jsonfile = sys.argv[1]
     except IndexError as e:
-        print "Missing argument - %s" % str(e)
-        print
-        print "Usage:"
-        print "bin/python client.py links"
-        print
-        print "links: json file download links and host."
-        print
-        print """{"links": ["link1.html","link2.html"], """
-        print """ "loops": 10, "clients": 5, """
-        print """ "host": "http://127.0.0.1:1234"}"""
-        print
+        print("Missing argument - %s" % str(e))
+        print("")
+        print("Usage:")
+        print("bin/python client.py links")
+        print("")
+        print("links: json file download links and host.")
+        print("")
+        print("""{"links": ["link1.html","link2.html"], """)
+        print(""" "loops": 10, "clients": 5, """)
+        print(""" "host": "http://127.0.0.1:1234"}""")
+        print("")
         sys.exit(0)
 
     with open(jsonfile) as file:
