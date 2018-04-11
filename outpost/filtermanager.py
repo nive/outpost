@@ -4,7 +4,8 @@
 import logging
 import json
 import re
-from zope.interface import Interface, implements
+from builtins import str
+from zope.interface import Interface, implementer
 from pyramid.path import DottedNameResolver
 from pyramid.path import caller_package
 
@@ -32,17 +33,18 @@ class IProxyRequest(Interface):
 
     """
 
+@implementer(IProxyRequest)
 class EmptyProxyResponse(object):
-    implements(IProxyRequest)
     status_int = 200
     content_type = ""
 
+@implementer(IFileRequest)
 class EmptyFileResponse(object):
-    implements(IFileRequest)
     status_int = 200
     content_type = ""
 
 
+@implementer(IFilter)
 class FilterConf(object):
     """
     Filter configuration class
@@ -79,8 +81,6 @@ class FilterConf(object):
             name = "HTML filter example"
         )
     """
-    implements(IFilter)
-
     callable=None
     apply_to=None
     hook="post"
@@ -110,7 +110,7 @@ class FilterConf(object):
                 # invalid value -> remove
                 fc.apply_to = None
         # resolve callable if it is a string
-        if fc.callable and isinstance(fc.callable, basestring):
+        if fc.callable and isinstance(fc.callable, str):
             base = caller_package()
             cc = DottedNameResolver(base).resolve(fc.callable)
             fc.callable = cc

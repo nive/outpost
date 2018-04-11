@@ -6,7 +6,7 @@ import gzip
 import logging
 import re
 
-from StringIO import StringIO
+from io import StringIO
 from zope.interface import alsoProvides
 from pyramid.renderers import render
 from pyramid.response import Response

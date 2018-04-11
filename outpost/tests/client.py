@@ -45,7 +45,7 @@ class ClientRunner(multiprocessing.Process):
                     response.raw.tell(),
                     response.reason
             )
-        except requests.exceptions.ConnectionError, e:
+        except requests.exceptions.ConnectionError as e:
             return (link,
                     999,
                     time.time()-t,
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     loops = clients = delay = 0
     try:
         jsonfile = sys.argv[1]
-    except IndexError, e:
+    except IndexError as e:
         print "Missing argument - %s" % str(e)
         print
         print "Usage:"

@@ -53,7 +53,7 @@ class Proxy(object):
         # post hooks are processed for the returned response.
         try:
             response = filtermanager.runPreHook(filtermanager.EmptyProxyResponse(), request, self.url)
-        except filtermanager.ResponseFinished, e:
+        except filtermanager.ResponseFinished as e:
             return e.response
 
         if response is None:
@@ -78,7 +78,7 @@ class Proxy(object):
 
         # clean up headers
         headers = dict(response.headers)
-        keys = [k.lower() for k in headers.keys()]
+        keys = [k.lower() for k in list(headers)]
         if 'content-length' in keys:
             removeHeader('Content-Length', headers)
         if 'transfer-encoding' in keys:
@@ -172,7 +172,7 @@ class Proxy(object):
             else:
                 log.debug("%s: %s %s, in %d ms %s" % (method, response.status_code, response.reason,
                                                       response.elapsed.microseconds/1000, url.destUrl))
-        except Exception, e:
+        except Exception as e:
             #todo excp types
             log.error("%s %s" % (str(e), url.destUrl))
             raise

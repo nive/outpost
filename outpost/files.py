@@ -44,7 +44,7 @@ class FileServer(object):
         # immediately
         try:
             file = filtermanager.runPreHook(filtermanager.EmptyFileResponse(), self.request, self.url)
-        except filtermanager.ResponseFinished, e:
+        except filtermanager.ResponseFinished as e:
             return e.response
 
         if file is None:
