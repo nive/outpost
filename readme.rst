@@ -12,12 +12,7 @@ Advanced options include request debugging and stream filter.
 Outpost also supports local javascript application development
 in combination with remote web api services. The build in proxy
 prevents browsers `Cross Origin Resource Scripting` restrictions
-by routing all requests through a single (local) address. In combination
-with Chrome or Firefox browsers build in developer tools
-Outpost gives a additional option to debug, alter and trace outgoing
-and incoming requests before being processed by the browser (or after the
-request has been send). Single requests can be stopped based on url 
-schemes and debugged on the commandline. 
+by routing all requests through a single (local) address.
 
 Implemented in pure python; with the pyramid web framework.
 

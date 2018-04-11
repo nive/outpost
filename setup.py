@@ -7,6 +7,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 requires = [
     'pyramid',
     'pyramid_debugtoolbar',
+    'pyramid_chameleon',
     'zope.interface',
     'waitress',
     'requests'
@@ -33,7 +34,7 @@ setup(name='outpost',
         ],
       author='Arndt Droullier, Nive GmbH',
       author_email='info@nive.co',
-      url='http://www.nive.co',
+      url='https://niveapps.com',
       keywords='server proxy development cors web pyramid',
       packages=find_packages(),
       include_package_data=True,
