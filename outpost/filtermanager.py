@@ -4,11 +4,14 @@
 import logging
 import json
 import re
-from builtins import str
 from zope.interface import Interface, implementer
 from pyramid.path import DottedNameResolver
 from pyramid.path import caller_package
 
+try:
+  basestring
+except NameError:
+  basestring = str
 
 class IFilter(Interface):
     """
@@ -110,7 +113,7 @@ class FilterConf(object):
                 # invalid value -> remove
                 fc.apply_to = None
         # resolve callable if it is a string
-        if fc.callable and isinstance(fc.callable, str):
+        if fc.callable and isinstance(fc.callable, basestring):
             base = caller_package()
             cc = DottedNameResolver(base).resolve(fc.callable)
             fc.callable = cc

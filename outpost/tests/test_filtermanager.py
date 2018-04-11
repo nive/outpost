@@ -17,7 +17,7 @@ class IfaceTest(unittest.TestCase):
     def test_fileok(self):
         file = testing.DummyRequest()
         directlyProvides(file, filtermanager.IFileRequest)
-        self.assert_(filtermanager.IFileRequest.providedBy(file))
+        self.assertTrue(filtermanager.IFileRequest.providedBy(file))
 
     def test_proxy(self):
         self.assertFalse(filtermanager.IProxyRequest.providedBy("oh no"))
@@ -25,13 +25,13 @@ class IfaceTest(unittest.TestCase):
     def test_proxyok(self):
         proxy = testing.DummyRequest()
         directlyProvides(proxy, filtermanager.IProxyRequest)
-        self.assert_(filtermanager.IProxyRequest.providedBy(proxy))
+        self.assertTrue(filtermanager.IProxyRequest.providedBy(proxy))
 
     def test_filter(self):
         self.assertFalse(filtermanager.IFilter.providedBy("oh no"))
 
     def test_filterok(self):
-        self.assert_(filtermanager.IFilter.providedBy(filtermanager.FilterConf()))
+        self.assertTrue(filtermanager.IFilter.providedBy(filtermanager.FilterConf()))
 
     def test_excp(self):
         filtermanager.ConfigurationError("OK")
@@ -41,8 +41,8 @@ class FilterConfTest(unittest.TestCase):
 
     def test_conf(self):
         c = filtermanager.FilterConf()
-        self.assert_(c.callable is None)
-        self.assert_(str(c))
+        self.assertTrue(c.callable is None)
+        self.assertTrue(str(c))
 
     def test_dict(self):
         values = dict(
@@ -54,9 +54,9 @@ class FilterConfTest(unittest.TestCase):
             name = "Filter example"
         )
         c = filtermanager.FilterConf.fromDict(values)
-        self.assert_(c.name is "Filter example")
+        self.assertTrue(c.name is "Filter example")
         self.assertFalse(c.apply_to)
-        self.assert_(str(c) is "Filter example")
+        self.assertTrue(str(c) is "Filter example")
 
     def test_dict_callable1(self):
         values = dict(
@@ -67,8 +67,8 @@ class FilterConfTest(unittest.TestCase):
             name = "Filter example"
         )
         c = filtermanager.FilterConf.fromDict(values)
-        self.assert_(c.name is "Filter example")
-        self.assert_(filtermanager.IFileRequest == c.apply_to)
+        self.assertTrue(c.name is "Filter example")
+        self.assertTrue(filtermanager.IFileRequest == c.apply_to)
 
     def test_dict_callable2(self):
         values = dict(
@@ -79,8 +79,8 @@ class FilterConfTest(unittest.TestCase):
             name = "Filter example"
         )
         c = filtermanager.FilterConf.fromDict(values)
-        self.assert_(c.name is "Filter example")
-        self.assert_(filtermanager.IFileRequest == c.apply_to)
+        self.assertTrue(c.name is "Filter example")
+        self.assertTrue(filtermanager.IFileRequest == c.apply_to)
 
     def test_dict_callable3(self):
         def runfilter(a,b,c,d):
@@ -93,8 +93,8 @@ class FilterConfTest(unittest.TestCase):
             name = "Filter example"
         )
         c = filtermanager.FilterConf.fromDict(values)
-        self.assert_(c.name is "Filter example")
-        self.assert_(filtermanager.IFileRequest == c.apply_to)
+        self.assertTrue(c.name is "Filter example")
+        self.assertTrue(filtermanager.IFileRequest == c.apply_to)
 
     def test_dict_apply1(self):
         values = dict(
@@ -105,8 +105,8 @@ class FilterConfTest(unittest.TestCase):
             name = "Filter example"
         )
         c = filtermanager.FilterConf.fromDict(values)
-        self.assert_(c.name is "Filter example")
-        self.assert_(filtermanager.IFileRequest == c.apply_to)
+        self.assertTrue(c.name is "Filter example")
+        self.assertTrue(filtermanager.IFileRequest == c.apply_to)
 
     def test_dict_apply2(self):
         values = dict(
@@ -117,8 +117,8 @@ class FilterConfTest(unittest.TestCase):
             name = "Filter example"
         )
         c = filtermanager.FilterConf.fromDict(values)
-        self.assert_(c.name is "Filter example")
-        self.assert_(filtermanager.IProxyRequest == c.apply_to)
+        self.assertTrue(c.name is "Filter example")
+        self.assertTrue(filtermanager.IProxyRequest == c.apply_to)
 
     def test_dict_apply3(self):
         values = dict(
@@ -129,7 +129,7 @@ class FilterConfTest(unittest.TestCase):
             name = "Filter example"
         )
         c = filtermanager.FilterConf.fromDict(values)
-        self.assert_(c.name is "Filter example")
+        self.assertTrue(c.name is "Filter example")
         self.assertFalse(c.apply_to)
 
     def test_test1(self):
@@ -152,7 +152,7 @@ class FilterConfTest(unittest.TestCase):
             name = "Filter example"
         )
         c = filtermanager.FilterConf.fromDict(values)
-        self.assert_(len(c.test())==1)
+        self.assertTrue(len(c.test())==1)
 
     def test_test3(self):
         values = dict(
@@ -171,11 +171,11 @@ class JsonTest(unittest.TestCase):
     def test_empty(self):
         jsonstr = " "
         ff = filtermanager.parseJsonString(jsonstr, exitOnTestFailure=False)
-        self.assert_(len(ff)==0)
+        self.assertEqual(len(ff), 0)
 
         jsonstr = None
         ff = filtermanager.parseJsonString(jsonstr, exitOnTestFailure=False)
-        self.assert_(len(ff)==0)
+        self.assertEqual(len(ff), 0)
 
     def test_single(self):
         jsonstr = """{
@@ -185,8 +185,8 @@ class JsonTest(unittest.TestCase):
            "settings": {"str": "http://127.0.0.1/assets/", "new": "http://cdn.someserver.com/"},
            "name": "String replacer example"}"""
         ff = filtermanager.parseJsonString(jsonstr, exitOnTestFailure=False)
-        self.assert_(len(ff)==1)
-        self.assert_(ff[0].name=="String replacer example")
+        self.assertEqual(len(ff), 1)
+        self.assertEqual(ff[0].name, "String replacer example")
 
     def test_multiple(self):
         jsonstr = """[{
@@ -202,9 +202,9 @@ class JsonTest(unittest.TestCase):
            "settings": {"str": "http://127.0.0.1/assets/", "new": "http://cdn.someserver.com/"},
            "name": "2. String replacer example"}]"""
         ff = filtermanager.parseJsonString(jsonstr, exitOnTestFailure=False)
-        self.assert_(len(ff)==2)
-        self.assert_(ff[0].name=="String replacer example")
-        self.assert_(ff[1].name=="2. String replacer example")
+        self.assertEqual(len(ff), 2)
+        self.assertEqual(ff[0].name, "String replacer example")
+        self.assertEqual(ff[1].name, "2. String replacer example")
 
     def test_failure(self):
         jsonstr = """{
@@ -214,7 +214,7 @@ class JsonTest(unittest.TestCase):
            "settings": {"str": "http://127.0.0.1/assets/", "new": "http://cdn.someserver.com/"},
            "name": "String replacer example"}"""
         ff = filtermanager.parseJsonString(jsonstr, exitOnTestFailure=False)
-        self.assert_(len(ff)==0)
+        self.assertEqual(len(ff), 0)
 
     def test_failure2(self):
         jsonstr = """{
@@ -244,7 +244,7 @@ class RunTest(unittest.TestCase):
         response.unicode_body = u"<html><body></body></html>"
         request = testing.DummyRequest()
         response = filtermanager.applyFilter(fc, response, request, request.url)
-        self.assert_(response.unicode_body=="<html><body>Updated!</body></html>")
+        self.assertTrue(response.unicode_body=="<html><body>Updated!</body></html>")
 
     def test_runpost(self):
         fc = filtermanager.FilterConf.fromDict(self.filter1)
@@ -253,7 +253,7 @@ class RunTest(unittest.TestCase):
         request = testing.DummyRequest()
         request.registry.settings = {"filter": (fc,)}
         response = filtermanager.runPostHook(response, request, request.url)
-        self.assert_(response.unicode_body=="<html><body>Updated!</body></html>")
+        self.assertTrue(response.unicode_body=="<html><body>Updated!</body></html>")
 
     def test_lookup_file(self):
         filter_file = dict(
@@ -270,7 +270,7 @@ class RunTest(unittest.TestCase):
         request = testing.DummyRequest()
         request.registry.settings = {"filter": (fc,)}
         filter = [f for f in filtermanager.lookupFilter("post", response, request, request.url)]
-        self.assert_(len(filter)==1)
+        self.assertTrue(len(filter)==1)
 
     def test_lookup_proxy(self):
         filter_proxy = dict(
@@ -287,7 +287,7 @@ class RunTest(unittest.TestCase):
         request = testing.DummyRequest()
         request.registry.settings = {"filter": (fc,)}
         filter = [f for f in filtermanager.lookupFilter("post", response, request, request.url)]
-        self.assert_(len(filter)==1)
+        self.assertTrue(len(filter)==1)
 
     def test_lookup_path(self):
         filter_path = dict(
@@ -304,11 +304,11 @@ class RunTest(unittest.TestCase):
         request.url = "http://localhost/files/index.html"
         request.registry.settings = {"filter": (fc,)}
         filter = [f for f in filtermanager.lookupFilter("post", response, request, request.url)]
-        self.assert_(len(filter)==1)
+        self.assertTrue(len(filter)==1)
 
         request.url = "http://localhost/files/image.png"
         filter = [f for f in filtermanager.lookupFilter("post", response, request, request.url)]
-        self.assert_(len(filter)==0)
+        self.assertTrue(len(filter)==0)
 
     def test_lookup_ct(self):
         filter_ct = dict(
@@ -325,11 +325,11 @@ class RunTest(unittest.TestCase):
         request = testing.DummyRequest()
         request.registry.settings = {"filter": (fc,)}
         filter = [f for f in filtermanager.lookupFilter("post", response, request, request.url)]
-        self.assert_(len(filter)==1)
+        self.assertTrue(len(filter)==1)
 
         response.content_type = "image/png"
         filter = [f for f in filtermanager.lookupFilter("post", response, request, request.url)]
-        self.assert_(len(filter)==0)
+        self.assertTrue(len(filter)==0)
 
 
     def test_lookup_all(self):
@@ -349,4 +349,4 @@ class RunTest(unittest.TestCase):
         request.url = "http://localhost/files/index.html"
         request.registry.settings = {"filter": (fc,)}
         filter = [f for f in filtermanager.lookupFilter("post", response, request, request.url)]
-        self.assert_(len(filter)==1)
+        self.assertTrue(len(filter)==1)
