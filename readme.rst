@@ -9,11 +9,6 @@ framework functionality in a single server application.
 
 Advanced options include request debugging and stream filter.
 
-Outpost also supports local javascript application development
-in combination with remote web api services. The build in proxy
-prevents browsers `Cross Origin Resource Scripting` restrictions
-by routing all requests through a single (local) address.
-
 Implemented in pure python; with the pyramid web framework.
 
 Please refer to Github for source codes: https://github.com/nive/outpost

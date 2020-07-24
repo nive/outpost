@@ -60,11 +60,11 @@ def template(response, request, filterconf, url):
         tmpl = wd + tmpl
     if not tmpl:
         return response
-    values = {"content": response.unicode_body, "response": response}
+    values = {"content": response.text, "response": response}
     v2 = filterconf.settings.get("values")
     if v2 and isinstance(v2, dict):
         values.update(v2)
-    response.unicode_body = render(tmpl, values, request=request)
+    response.text = render(tmpl, values, request=request)
     return response
 
 

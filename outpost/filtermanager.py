@@ -226,11 +226,11 @@ def lookupFilter(hook, response, request, url):
             continue
         # match path
         if ff.path:
-            if not ff.path.search(str(url)):
+            if ff.path.search(str(url)) is None:
                 continue
         # match content type
         if ff.content_type:
-            if not ff.content_type.search(response.content_type):
+            if ff.content_type.search(response.content_type) is None:
                 continue
         # match status
         if ff.status:
