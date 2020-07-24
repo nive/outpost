@@ -19,7 +19,7 @@ except:
     README = ''
 
 setup(name='outpost',
-      version='0.5.1',
+      version='0.5.2',
       description='Application level proxy server',
       long_description=README,
       classifiers=[
@@ -28,9 +28,8 @@ setup(name='outpost',
         "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
         "Topic :: Software Development :: Testing",
         "Development Status :: 4 - Beta",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: BSD License"
         ],
       author='Arndt Droullier, Nive GmbH',

@@ -1,4 +1,8 @@
-0.5.1 
+0.5.2
+-----
+- fixes
+
+0.5.1
 -----
 - Python 3 compat
 - fixes
